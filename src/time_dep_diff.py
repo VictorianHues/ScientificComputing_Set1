@@ -2,8 +2,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import concurrent.futures
+from numba import jit, njit
 
 from scipy.special import erfc
+
+@njit
+def fast_solve(c, time_step_num, n_steps, time_step_size, diffusion_coefficient, x_step_size):
+    for t in range(0, time_step_num - 1):
+        new_c = c[t].copy()  
+        
+        for i in range(n_steps):
+            for j in range(1, n_steps - 1):
+                new_c[i, j] = (
+                    c[t, i, j] +
+                    (time_step_size * diffusion_coefficient / x_step_size**2) *
+                    (c[t, (i+1)% n_steps, j] + c[t, (i-1)% n_steps, j] + c[t, i, j+1] + c[t, i, j-1 ] - 4 * c[t, i, j])
+                )
+
+        c[t+1] = new_c
+
+        # Top and Bottom Boundaries
+        c[t+1, :, -1] = c[t,:,-1]
+        c[t+1, :, 0] = 0.0
+
+    return c
+
 
 class TimeDependentDiffusion:
     def __init__(self,
@@ -39,28 +62,28 @@ class TimeDependentDiffusion:
         if stable_val > 1.0:
             raise ValueError(f"Unstable solution, please use smaller diffusion coefficient or time step size. Current value: {stable_val}")
 
-
     def solve(self):
-        for t in range(1, self.time_step_num - 1):
-            new_c = self.c[t].copy()  
+        self.c = fast_solve(self.c, self.time_step_num, self.n_steps, self.time_step_size, self.diffusion_coefficient, self.x_step_size)
+        # for t in range(1, self.time_step_num - 1):
+        #     new_c = self.c[t].copy()  
             
-            for i in range(1, self.n_steps - 1):
-                for j in range(self.n_steps - 1):
-                    new_c[i, j] = (
-                        self.c[t, i, j] +
-                        (self.time_step_size * self.diffusion_coefficient / self.x_step_size**2) *
-                        (self.c[t, i+1, j] + self.c[t, i-1, j] + self.c[t, i, j+1 % self.n_steps] + self.c[t, i, j-1 % self.n_steps] - 4 * self.c[t, i, j])
-                    )
+        #     for i in range(self.n_steps):
+        #         for j in range(1, self.n_steps - 1):
+        #             new_c[i, j] = (
+        #                 self.c[t, i, j] +
+        #                 (self.time_step_size * self.diffusion_coefficient / self.x_step_size**2) *
+        #                 (self.c[t, (i+1)% self.n_steps, j] + self.c[t, (i-1)% self.n_steps, j] + self.c[t, i, j+1] + self.c[t, i, j-1 ] - 4 * self.c[t, i, j])
+        #             )
 
-            # Left and Right Boundaries
-            #new_c[0, :] = new_c[-2, :]
-            #new_c[-1, :] = new_c[1, :]
+        #     # Left and Right Boundaries
+        #     #new_c[0, :] = new_c[-2, :]
+        #     #new_c[-1, :] = new_c[1, :]
 
-            self.c[t+1] = new_c
+        #     self.c[t+1] = new_c
 
-            # Top and Bottom Boundaries
-            self.c[t+1, :, -1] = self.initial_condition_func(self.x_points, self.y_points)
-            self.c[t+1, :, 0] = 0.0
+        #     # Top and Bottom Boundaries
+        #     self.c[t+1, :, -1] = self.initial_condition_func(self.x_points, self.y_points)
+        #     self.c[t+1, :, 0] = 0.0
 
         return self.c
     
