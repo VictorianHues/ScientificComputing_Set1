@@ -2,30 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import concurrent.futures
-from numba import jit, njit
+
+from finite_difference import fast_solve
 
 from scipy.special import erfc
 
-@njit
-def fast_solve(c, time_step_num, n_steps, time_step_size, diffusion_coefficient, x_step_size):
-    for t in range(0, time_step_num - 1):
-        new_c = c[t].copy()  
-        
-        for i in range(n_steps):
-            for j in range(1, n_steps - 1):
-                new_c[i, j] = (
-                    c[t, i, j] +
-                    (time_step_size * diffusion_coefficient / x_step_size**2) *
-                    (c[t, (i+1)% n_steps, j] + c[t, (i-1)% n_steps, j] + c[t, i, j+1] + c[t, i, j-1 ] - 4 * c[t, i, j])
-                )
-
-        c[t+1] = new_c
-
-        # Top and Bottom Boundaries
-        c[t+1, :, -1] = c[t,:,-1]
-        c[t+1, :, 0] = 0.0
-
-    return c
 
 
 class TimeDependentDiffusion:
