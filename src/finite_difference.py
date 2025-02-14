@@ -28,12 +28,40 @@ def fast_solve(c, time_step_num, n_steps, time_step_size, diffusion_coefficient,
     return c
 
 
+@njit
+def jacobi(c_old, c_new, max_iter, n_steps, tolerance):
+    for iteration in range(max_iter):
+                
+        # Top and Bottom Boundaries
+        c_old[:, -1] = 1.0
+        c_old[:, 0] = 0.0
 
-# @jit
+        # Jacobi update rule
+        for i in range(n_steps):
+            for j in range(1, n_steps - 1):
+                c_new[i, j] = 0.25 * (
+                    c_old[(i+1) % n_steps, j] +
+                    c_old[(i-1) % n_steps, j] +
+                    c_old[i, j+1] +
+                    c_old[i, j-1]
+                )
+
+        # Stopping criterion
+        delta = np.max(np.abs(c_new - c_old))
+        if delta < tolerance:
+            return  iteration
+
+        # Update step
+        c_old = c_new.copy()
+
+
+
+
+@njit
 def SOR(c, omega, mask=None, tolerance= None):
     time_step_num, width, height = c.shape
     if mask is None:
-        mask = np.ones([width, height])
+        mask = np.ones(shape=c.shape[1:])
     for t in range(0, time_step_num - 1):
         
         for i in range(1, height -1):
@@ -51,7 +79,7 @@ def SOR(c, omega, mask=None, tolerance= None):
         c[t+1, 0] = 0.0
 
         if tolerance is not None:
-            eps = np.max(np.abs(c[-1] - c[-2]))
+            eps = np.max(np.abs(c[t+1] - c[t]))
             if eps < tolerance:
                 break
 
