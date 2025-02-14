@@ -36,9 +36,10 @@ def SOR(c, omega, mask=None, tolerance= None):
         mask = np.ones([width, height])
     for t in range(0, time_step_num - 1):
         
-        for i in range(width):
-            for j in reversed(range(1, height - 1)):
-                c[t+1, i, j] = mask[i,j] * (omega / 4.0 * (c[t, (i+1)% width, j] + c[t+1, (i-1)% width, j] + c[t+1, i, j+1] + c[t, i, j-1 ])
+        for i in range(1, height -1):
+            c[t+1, i, -1] = c[t, i, -1] # to avoid adding sink on left side
+            for j in range(width):
+                c[t+1, i, j] = mask[i,j] * (omega / 4.0 * (c[t, i+1, j] + c[t+1, i-1, j] + c[t+1, i, (j-1)% width] + c[t, i, (j+1)% width ])
                     + (1-omega) * c[t, i, j] )
                 
         
@@ -46,8 +47,8 @@ def SOR(c, omega, mask=None, tolerance= None):
 
 
         # Top and Bottom Boundaries
-        c[t+1, :, -1] = c[t,:,-1]
-        c[t+1, :, 0] = 0.0
+        c[t+1, -1] = c[t, -1]
+        c[t+1, 0] = 0.0
 
         if tolerance is not None:
             eps = np.max(np.abs(c[-1] - c[-2]))

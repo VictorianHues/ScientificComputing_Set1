@@ -32,8 +32,8 @@ class SORDiffusion:
 
         self.c = np.zeros((self.time_step_num, self.n_steps, self.n_steps))
 
-        self.c[0, :, -1] = self.initial_condition_func(self.x_points, self.y_points)
-        self.c[0, :, 0] = 0.0
+        self.c[0, -1, :] = self.initial_condition_func(self.x_points, self.y_points)
+        self.c[0, 0, :] = 0.0
  
         if self.omega > 2.0:
             raise ValueError(f"SOR becomes unstable for omega > 2, please use a smaller value. Current value: {self.omega}")
@@ -41,7 +41,6 @@ class SORDiffusion:
     def solve(self):
         
         _, t = SOR(self.c, self.omega, )
-        print(t)
         return self.c
     
     def plot_animation(self):
@@ -55,7 +54,7 @@ class SORDiffusion:
         cbar.set_label("Concentration")
 
         def update(frame):
-            heatmap.set_array(self.c[frame].T) 
+            heatmap.set_array(self.c[frame]) 
             ax.set_title(f"Time-Dependent Diffusion (t = {frame/self.time_step_num})")
             return heatmap,
 

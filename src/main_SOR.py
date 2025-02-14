@@ -8,7 +8,7 @@ def main():
     y_length = 1.0
     n_steps = 100
     time_step_num = 1000
-    omega = 1.7
+    omega = 1.9
     # """
     sor_diffusion = SORDiffusion(
                                             x_length, 
