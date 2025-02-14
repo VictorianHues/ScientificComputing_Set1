@@ -38,10 +38,12 @@ class SORDiffusion:
         # if self.omega > 2.0:
         #     raise ValueError(f"SOR becomes unstable for omega > 2, please use a smaller value. Current value: {self.omega}")
 
-    def solve(self):
+    def solve(self, tolerance = None):
         
-        _, t = SOR(self.c, self.omega, )
-        return self.c
+        _, t = SOR(self.c, self.omega, tolerance=tolerance)
+        if tolerance is not None:
+            print('finished after ', t, ' iterations')
+        return self.c, t
     
     def plot_animation(self):
         fig, ax = plt.subplots()
