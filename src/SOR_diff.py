@@ -3,27 +3,25 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import concurrent.futures
 
-from finite_difference import fast_solve
+from finite_difference import fast_solve, SOR
 
 from scipy.special import erfc
 
 
 
-class TimeDependentDiffusion:
+class SORDiffusion:
     def __init__(self,
-                 time_step_size : float,
                  x_length : float,
                  y_length : float,
                  n_steps : int,
-                 total_time : float,
-                 diffusion_coefficient : float,
+                 time_step_num : float,
+                 omega : float,
                  initial_condition_func : callable):
-        self.time_step_size = time_step_size
         self.x_length = x_length
         self.y_length = y_length
         self.n_steps = n_steps
-        self.total_time = total_time
-        self.diffusion_coefficient = diffusion_coefficient
+        self.time_step_num = time_step_num
+        self.omega = omega
         self.initial_condition_func = initial_condition_func
 
         self.x_points = np.linspace(0, self.x_length, self.n_steps)
@@ -32,40 +30,17 @@ class TimeDependentDiffusion:
         self.x_step_size = self.x_length / (self.n_steps - 1)
         self.y_step_size = self.y_length / (self.n_steps - 1)
 
-        self.time_step_num = int(self.total_time / self.time_step_size)
-
         self.c = np.zeros((self.time_step_num, self.n_steps, self.n_steps))
 
-        self.c[0, :, -1] = self.initial_condition_func(self.x_points, self.y_points)
-        self.c[0, :, 0] = 0.0
-
-        stable_val = (4 * self.diffusion_coefficient * self.time_step_size) / (self.x_step_size/2**2)
-        if stable_val > 1.0:
-            raise ValueError(f"Unstable solution, please use smaller diffusion coefficient or time step size. Current value: {stable_val}")
+        self.c[0, -1, :] = self.initial_condition_func(self.x_points, self.y_points)
+        self.c[0, 0, :] = 0.0
+ 
+        # if self.omega > 2.0:
+        #     raise ValueError(f"SOR becomes unstable for omega > 2, please use a smaller value. Current value: {self.omega}")
 
     def solve(self):
-        self.c = fast_solve(self.c, self.time_step_num, self.n_steps, self.time_step_size, self.diffusion_coefficient, self.x_step_size)
-        # for t in range(1, self.time_step_num - 1):
-        #     new_c = self.c[t].copy()  
-            
-        #     for i in range(self.n_steps):
-        #         for j in range(1, self.n_steps - 1):
-        #             new_c[i, j] = (
-        #                 self.c[t, i, j] +
-        #                 (self.time_step_size * self.diffusion_coefficient / self.x_step_size**2) *
-        #                 (self.c[t, (i+1)% self.n_steps, j] + self.c[t, (i-1)% self.n_steps, j] + self.c[t, i, j+1] + self.c[t, i, j-1 ] - 4 * self.c[t, i, j])
-        #             )
-
-        #     # Left and Right Boundaries
-        #     #new_c[0, :] = new_c[-2, :]
-        #     #new_c[-1, :] = new_c[1, :]
-
-        #     self.c[t+1] = new_c
-
-        #     # Top and Bottom Boundaries
-        #     self.c[t+1, :, -1] = self.initial_condition_func(self.x_points, self.y_points)
-        #     self.c[t+1, :, 0] = 0.0
-
+        
+        _, t = SOR(self.c, self.omega, )
         return self.c
     
     def plot_animation(self):
@@ -73,18 +48,17 @@ class TimeDependentDiffusion:
         heatmap = ax.imshow(self.c[0], cmap="hot", origin="lower", extent=[0, self.x_length, 0, self.y_length])
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
-        ax.set_title("Time-Dependent Diffusion")
+        ax.set_title("Equilibrium Diffusion")
 
         cbar = plt.colorbar(heatmap)
         cbar.set_label("Concentration")
 
         def update(frame):
-            heatmap.set_array(self.c[frame].T) 
-            ax.set_title(f"Time-Dependent Diffusion (t = {frame/self.time_step_num})")
+            heatmap.set_array(self.c[frame]) 
+            ax.set_title(f"Equilibrium Diffusion (frame = {frame})")
             return heatmap,
 
         ani = animation.FuncAnimation(fig, update, frames=self.time_step_num, interval=50, blit=False)
-
         plt.show()
 
     def plot_y_slice(self, x_val):
