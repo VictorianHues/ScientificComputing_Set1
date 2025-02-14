@@ -41,18 +41,11 @@ class VibratingString:
         for i in range(self.spatial_points):
             if self.mask[i]:
                 self.Psi_grid[0, i] = self.initial_condition_func(self.x_points[i])
+        self.Psi_grid[1, :] = self.Psi_grid[0, :]
 
         # Set Boundary Conditions
         self.Psi_grid[:, 0] = 0
         self.Psi_grid[:, -1] = 0
-
-
-    # Private method to initialize the first time step
-    def __initialize_first_time_step(self):
-        for i in range(1, self.spatial_points - 1):
-            self.Psi_grid[1, i] = (self.Psi_grid[0, i] +
-                                0.5 * (self.c**2 * self.time_step_size**2 / self.spatial_step_size**2) *
-                                (self.Psi_grid[0, i+1] - 2*self.Psi_grid[0, i] + self.Psi_grid[0, i-1]))
 
     # Private method to update the grid
     def __update_grid(self, n, i):
@@ -61,8 +54,6 @@ class VibratingString:
                                 + 2*self.Psi_grid[n, i] - self.Psi_grid[n-1, i])
 
     def solve(self):
-        self.__initialize_first_time_step()
-
         for n in range(1, self.time_steps - 1):
             for i in range(1, self.spatial_points - 1):
                 self.__update_grid(n, i)
