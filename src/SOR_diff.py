@@ -35,8 +35,8 @@ class SORDiffusion:
         self.c[0, -1, :] = self.initial_condition_func(self.x_points, self.y_points)
         self.c[0, 0, :] = 0.0
  
-        if self.omega > 2.0:
-            raise ValueError(f"SOR becomes unstable for omega > 2, please use a smaller value. Current value: {self.omega}")
+        # if self.omega > 2.0:
+        #     raise ValueError(f"SOR becomes unstable for omega > 2, please use a smaller value. Current value: {self.omega}")
 
     def solve(self):
         
@@ -48,14 +48,14 @@ class SORDiffusion:
         heatmap = ax.imshow(self.c[0], cmap="hot", origin="lower", extent=[0, self.x_length, 0, self.y_length])
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
-        ax.set_title("Time-Dependent Diffusion")
+        ax.set_title("Equilibrium Diffusion")
 
         cbar = plt.colorbar(heatmap)
         cbar.set_label("Concentration")
 
         def update(frame):
             heatmap.set_array(self.c[frame]) 
-            ax.set_title(f"Time-Dependent Diffusion (t = {frame/self.time_step_num})")
+            ax.set_title(f"Equilibrium Diffusion (frame = {frame})")
             return heatmap,
 
         ani = animation.FuncAnimation(fig, update, frames=self.time_step_num, interval=50, blit=False)

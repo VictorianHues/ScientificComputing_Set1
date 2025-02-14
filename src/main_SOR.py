@@ -6,7 +6,7 @@ from time_dep_diff_tools import plot_y_slice_time_magnitudes
 def main():
     x_length = 1.0
     y_length = 1.0
-    n_steps = 100
+    n_steps = 50
     time_step_num = 1000
     omega = 1.9
     # """
