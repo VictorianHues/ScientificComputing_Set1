@@ -4,13 +4,13 @@ from time_dep_diff import TimeDependentDiffusion
 from time_dep_diff_tools import plot_y_slice_time_magnitudes
 
 def main():
-    time_step_size = 0.00001
+    time_step_size = 0.01
     x_length = 1.0
     y_length = 1.0
     n_steps = 100
     total_time = 1.0
-    diffusion_coefficient = 1.0
-    """
+    diffusion_coefficient = 0.01
+
     time_diffusion = TimeDependentDiffusion(time_step_size, 
                                             x_length, 
                                             y_length, 
@@ -22,6 +22,8 @@ def main():
     solution = time_diffusion.solve()
     time_diffusion.plot_animation()
 
+
+    """
     y_slice = 0.5
     time_diffusion.plot_y_slice(y_slice)
 
@@ -53,7 +55,7 @@ def main():
     
     time_diffusion_sin.solve()
     time_diffusion_sin.plot_animation()
-    """
+    
     time_test_array = [1.0, 0.1, 0.01, 0.001]
 
     plot_y_slice_time_magnitudes(time_step_size, 
@@ -62,6 +64,7 @@ def main():
                                  n_steps, 
                                  diffusion_coefficient,
                                  time_test_array)
+                                """
 
 
 if __name__ == '__main__':
