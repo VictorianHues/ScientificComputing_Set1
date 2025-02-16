@@ -24,7 +24,7 @@ def main():
     # sor_diffusion.plot_y_slice(0)
     
     
-def iter_to_convergence_SOR(tolerances, omega, max_steps=100000):
+def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
     Ns = np.zeros_like(tolerances)
     for i, tolerance in enumerate(tolerances):
         
@@ -40,7 +40,8 @@ def iter_to_convergence_SOR(tolerances, omega, max_steps=100000):
                                                 n_steps, 
                                                 time_step_num, 
                                                 omega, 
-                                                lambda x, y: 1)
+                                                lambda x, y: 1,
+                                                mask)
         
         solution, t = sor_diffusion.solve(tolerance=tolerance)
         # sor_diffusion.plot_animation()    
@@ -100,15 +101,19 @@ def min_val_approximation(x, y, dx = 1):
     return x_min, y_min
     
     
-def optimal_omega_plot():
-    omegas = np.linspace(1.7, 2, 100)
+def optimal_omega_plot(mask = None, title='No Obstructions'):
+    omegas = np.linspace(0.01, 2, 500)
     Ns = np.zeros_like(omegas)
     tolerance = [1e-8]
     
     for i, omega in enumerate(omegas):
-        N = iter_to_convergence_SOR(tolerance, omega, max_steps=10000)
+        N = iter_to_convergence_SOR(tolerance, omega, max_steps=100000, mask = mask)
         Ns[i] = N
         
+    plt.figure(figsize=[10,3])
+    plt.tight_layout()
+    
+    plt.subplots_adjust(bottom=0.15)
     plt.plot(omegas, Ns)
     w_min, N_min = min_val_approximation(omegas, Ns)
     # print(p, N_min)
@@ -116,11 +121,12 @@ def optimal_omega_plot():
     plt.grid()
     plt.legend()
     # plt.xscale('log')
-    # plt.yscale('log')
+    plt.yscale('log')
     plt.xlabel(r'$\omega$')
     plt.ylabel('N')
-    plt.title(r'Number of Iterations to Reach the specified tolerance for different $\omega$')
-    plt.savefig('plots/opt_omega.png', dpi=600)
+    plt.title(title + r',  $\omega_{min} = ${.2f}'.format(w_min))
+    plt.ylim([2e2,9e4])
+    plt.savefig('plots/opt_omega_full.png', dpi=600)
         
 
 if __name__ == '__main__':
