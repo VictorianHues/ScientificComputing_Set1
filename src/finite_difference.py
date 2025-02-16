@@ -54,6 +54,8 @@ def jacobi(c_old, c_new, max_iter, n_steps, tolerance):
         # Update step
         c_old = c_new.copy()
 
+    return max_iter
+
 
 
 
