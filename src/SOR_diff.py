@@ -16,13 +16,15 @@ class SORDiffusion:
                  n_steps : int,
                  time_step_num : float,
                  omega : float,
-                 initial_condition_func : callable):
+                 initial_condition_func : callable,
+                 mask = None):
         self.x_length = x_length
         self.y_length = y_length
         self.n_steps = n_steps
         self.time_step_num = time_step_num
         self.omega = omega
         self.initial_condition_func = initial_condition_func
+        self.mask = mask
 
         self.x_points = np.linspace(0, self.x_length, self.n_steps)
         self.y_points = np.linspace(0, self.y_length, self.n_steps)
@@ -38,10 +40,12 @@ class SORDiffusion:
         # if self.omega > 2.0:
         #     raise ValueError(f"SOR becomes unstable for omega > 2, please use a smaller value. Current value: {self.omega}")
 
-    def solve(self):
+    def solve(self, tolerance = None):
         
-        _, t = SOR(self.c, self.omega, )
-        return self.c
+        _, t = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance)
+        if tolerance is not None:
+            print('finished after ', t, ' iterations')
+        return self.c, t
     
     def plot_animation(self):
         fig, ax = plt.subplots()
