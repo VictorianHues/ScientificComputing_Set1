@@ -10,6 +10,7 @@
 #include <map>
 #include <vector>
 #include <cmath>
+#include<omp.h>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -55,7 +56,7 @@ std::map<std::string, double> convert_dict(py::dict dict)
 
 
 /*
-Twin of jacoby in finite_difference.py
+Twin of jacobi in finite_difference.py
 
 Params:
     c_old, c_new: [height x width] ndarray
@@ -75,6 +76,7 @@ int fast_jacobi(py::array_t<double> & c_old_np, py::array_t<double> & c_new_np, 
             c_old(j, 0) = 0;
         }
         double delta = 0;
+        #pragma omp parallel for
         for(py::size_t i=0; i<width; i++){
             for(py::size_t j=1; j<width-1; j++){
                 
@@ -94,6 +96,7 @@ int fast_jacobi(py::array_t<double> & c_old_np, py::array_t<double> & c_new_np, 
             return t;
         }
         // could not get swapping to work
+        #pragma omp parallel for
         for(py::size_t i=0; i<width; i++){
             for(py::size_t j=0; j<width; j++){                
                 c_old(i,j)  = c_new(i,j);
