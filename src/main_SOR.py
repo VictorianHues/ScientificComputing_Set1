@@ -101,7 +101,7 @@ def min_val_approximation(x, y, dx = 1):
     return x_min, y_min
     
     
-def optimal_omega_plot(mask = None, title='No Obstructions'):
+def optimal_omega_plot(mask = None, title='No Obstructions', file ='plots/opt_omega_full.png' ):
     omegas = np.linspace(0.01, 2, 500)
     Ns = np.zeros_like(omegas)
     tolerance = [1e-8]
@@ -126,7 +126,7 @@ def optimal_omega_plot(mask = None, title='No Obstructions'):
     plt.ylabel('N')
     plt.title(title + r',  $\omega_{min} = ${.2f}'.format(w_min))
     plt.ylim([2e2,9e4])
-    plt.savefig('plots/opt_omega_full.png', dpi=600)
+    plt.savefig(file, dpi=600)
         
 
 if __name__ == '__main__':
