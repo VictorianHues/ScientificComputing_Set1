@@ -6,9 +6,9 @@ from vibr_string import VibratingString
 
 def main():
     length = 1.0
-    spatial_points = 101
+    spatial_points = 1001
     total_time = 1.0
-    time_step_size = 0.001
+    time_step_size = 0.0001
     c = 1.0
 
     sine_constant = 2

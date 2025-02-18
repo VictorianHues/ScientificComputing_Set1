@@ -2,6 +2,35 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from typing import Optional
+from numba import njit, prange
+
+@njit
+def update_grid(Psi_grid, 
+                c, 
+                time_step_size, 
+                spatial_step_size, 
+                n, i):
+    Psi_grid[n+1, i] = (c**2 * time_step_size**2 / spatial_step_size**2 * 
+                        (Psi_grid[n, i+1] - 2*Psi_grid[n, i] + Psi_grid[n, i-1])
+                        + 2*Psi_grid[n, i] - Psi_grid[n-1, i])
+
+@njit(parallel=True)
+def solve(Psi_grid, 
+          c, 
+          time_step_size, 
+          spatial_step_size, 
+          time_steps, 
+          spatial_points):
+    for n in range(1, time_steps - 1):
+        for i in prange(1, spatial_points - 1):
+            update_grid(Psi_grid, 
+                        c, 
+                        time_step_size, 
+                        spatial_step_size, 
+                        n, i)
+
+    Psi_grid[:, 0] = 0
+    Psi_grid[:, -1] = 0
 
 class VibratingString:
     def __init__(self, 
@@ -47,19 +76,8 @@ class VibratingString:
         self.Psi_grid[:, 0] = 0
         self.Psi_grid[:, -1] = 0
 
-    # Private method to update the grid
-    def __update_grid(self, n, i):
-        self.Psi_grid[n+1, i] = (self.c**2 * self.time_step_size**2 / self.spatial_step_size**2 * 
-                                (self.Psi_grid[n, i+1] - 2*self.Psi_grid[n, i] + self.Psi_grid[n, i-1])
-                                + 2*self.Psi_grid[n, i] - self.Psi_grid[n-1, i])
-
     def solve(self):
-        for n in range(1, self.time_steps - 1):
-            for i in range(1, self.spatial_points - 1):
-                self.__update_grid(n, i)
-
-        self.Psi_grid[:, 0] = 0
-        self.Psi_grid[:, -1] = 0
+        solve(self.Psi_grid, self.c, self.time_step_size, self.spatial_step_size, self.time_steps, self.spatial_points)
 
 
     def plot_heat_map(self):
@@ -88,13 +106,16 @@ class VibratingString:
 
         fig.canvas.mpl_connect('close_event', close_event)
 
+        update_interval = 100
+
         for n in range(self.time_steps-1):
             if self.close:
                 break
 
-            line.set_ydata(self.Psi_grid[n])
-            fig.canvas.draw()
-            plt.pause(0.01)
+            if n % update_interval == 0:
+                line.set_ydata(self.Psi_grid[n])
+                fig.canvas.draw()
+                plt.pause(self.time_step_size )
 
         plt.ioff()
         plt.show()
