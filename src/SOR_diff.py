@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import concurrent.futures
 
 from finite_difference import fast_solve, SOR
 
@@ -42,10 +41,10 @@ class SORDiffusion:
 
     def solve(self, tolerance = None):
         
-        _, t = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance)
+        _, self.end_time = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance)
         if tolerance is not None:
-            print('finished after ', t, ' iterations')
-        return self.c, t
+            print('finished after ', self.end_time, ' iterations')
+        return self.c, self.end_time
     
     def plot_animation(self):
         fig, ax = plt.subplots()
@@ -62,7 +61,7 @@ class SORDiffusion:
             ax.set_title(f"Equilibrium Diffusion (frame = {frame})")
             return heatmap,
 
-        ani = animation.FuncAnimation(fig, update, frames=self.time_step_num, interval=50, blit=False)
+        ani = animation.FuncAnimation(fig, update, frames=range(0, self.end_time, 100), interval=50, blit=False)
         plt.show()
 
     def plot_y_slice(self, x_val):
@@ -71,43 +70,55 @@ class SORDiffusion:
         plt.plot(self.y_points, self.c[-1, x_idx, :])
         plt.xlabel("Y")
         plt.ylabel("Concentration")
-        plt.title(f"Concentration Profile at X = {x_val} and time = {self.total_time}")
+        plt.title(f"Concentration Profile at X = {x_val} and time = {self.time_step_num}")
         plt.show()
 
-    def analytical_solution(self, x, t, N=100):  
-        sum = np.zeros_like(x, dtype=np.float64)
+    def plot_single_frame(self, time):
+        fig, ax = plt.subplots(figsize = (10,8))
+        heatmap = ax.imshow(self.c[time,:,:], cmap="hot", origin="lower", extent=[0, self.x_length, 0, self.y_length])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_title(f"Numerical-Analytical Difference")
 
-        for i in range(N):
-            term1 = erfc((1 - x + 2 * i) / (2 * np.sqrt(self.diffusion_coefficient * t)))
-            term2 = erfc((1 + x + 2 * i) / (2 * np.sqrt(self.diffusion_coefficient * t)))
+        cbar = plt.colorbar(heatmap)
+        cbar.set_label("Difference")
 
-            sum += term1 - term2
+        plt.show()
+    
+    def plot_analytical_sol(self):
+        y_values = np.linspace(0, 1, self.n_steps)
+        analytical_solution = np.tile(y_values[:, np.newaxis], (1, self.n_steps))
 
-        return sum
+        fig, ax = plt.subplots(figsize = (10,8))
+        heatmap = ax.imshow(analytical_solution, cmap="hot", origin="lower", extent=[0, self.x_length, 0, self.y_length])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_title(f"Numerical-Analytical Difference")
 
-    def compare_solutions(self,time_index):
-        selected_time = self.time_step_size * time_index  # Corresponding time
+        cbar = plt.colorbar(heatmap)
+        cbar.set_label("Difference")
 
-        numerical = self.c[time_index, self.n_steps // 2, :]  # Extract middle column, range of y values at x
+        plt.show()
 
-        analytical_solution = self.analytical_solution(self.x_points, selected_time)
 
-        error = np.abs(numerical - analytical_solution)
-        rmse = np.sqrt(np.mean(error**2) / self.n_steps)
+    def compare_solutions_full_range(self, time):
+        y_values = np.linspace(0, 1, self.n_steps)
+        analytical_solution = np.tile(y_values[:, np.newaxis], (1, self.n_steps))
 
-        fig, ax1 = plt.subplots(figsize=(8, 5))
+        numerical = self.c[time, :, :]
+        print(f"Time: {time}")
 
-        ax1.plot(self.x_points, numerical, 'bo-', label="Numerical (Simulation)")
-        ax1.plot(self.x_points, analytical_solution, 'r--', label="Analytical (erfc solution)")
-        ax1.set_xlabel("x")
-        ax1.set_ylabel("Concentration")
-        ax1.set_title(f"Comparison at t = {selected_time:.2f}, Root Mean Squared Error = {rmse:.5f}")
-        ax1.legend(loc='upper left')
-        ax1.grid()
+        difference = np.abs(numerical - analytical_solution)
+        rmse = np.sqrt(np.mean(difference**2))
+        print(f"Root Mean Squared Error: {rmse}")
 
-        ax2 = ax1.twinx()
-        ax2.plot(self.x_points, error, 'g-', label="Error")
-        ax2.set_ylabel("Error")
-        ax2.legend(loc='lower left')
+        fig, ax = plt.subplots(figsize=(10, 8))
+        heatmap = ax.imshow(difference, cmap="coolwarm", origin="lower", extent=[0, self.x_length, 0, self.y_length])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_title(f"Numerical-Analytical Dif at {time} (RMSE: {rmse})")
+
+        cbar = plt.colorbar(heatmap)
+        cbar.set_label("Difference")
 
         plt.show()
