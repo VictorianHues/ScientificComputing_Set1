@@ -49,10 +49,11 @@ def jacobi(c_old, c_new, max_iter, n_steps, tolerance):
         # Stopping criterion
         delta = np.max(np.abs(c_new - c_old))
         if delta < tolerance:
-            return  iteration
+            return  iteration, delta
 
         # Update step
         c_old = c_new.copy()
+    return iteration, delta
 
 
 
@@ -83,7 +84,7 @@ def SOR(c, omega, mask=None, tolerance= None):
             if eps < tolerance:
                 break
 
-    return c, t
+    return c, t, eps
 
 
 # def SOR_until_tolerance(c, omega, tolerance, mask=None):

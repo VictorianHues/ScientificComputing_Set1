@@ -13,7 +13,7 @@ class Jacobi:
         self.c_old = self.c_new.copy()
 
     def solve(self):
-        self.max_iter = jacobi(self.c_old, self.c_new, self.max_iter, self.n_steps, self.epsilon)
+        self.max_iter, tol = jacobi(self.c_old, self.c_new, self.max_iter, self.n_steps, self.epsilon)
         # for iteration in range(self.max_iter):
             
         #     # Top and Bottom Boundaries
@@ -38,7 +38,7 @@ class Jacobi:
         #     # Update step
         #     np.copyto(self.c_old, self.c_new) 
 
-        return self.c_new, self.max_iter
+        return self.c_new, self.max_iter, tol
 
 # Example usage
 if __name__ == '__main__':

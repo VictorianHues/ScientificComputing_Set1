@@ -42,10 +42,10 @@ class SORDiffusion:
 
     def solve(self, tolerance = None):
         
-        _, t = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance)
+        _, t, tol = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance)
         if tolerance is not None:
-            print('finished after ', t, ' iterations')
-        return self.c, t
+            print('finished at iteration', t, ' with tolerance ', tol)
+        return self.c, t, tol
     
     def plot_animation(self):
         fig, ax = plt.subplots()
