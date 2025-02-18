@@ -1,39 +1,31 @@
 import numpy as np
+import time
+import cProfile
 
-from time_dep_diff import TimeDependentDiffusion
-from time_dep_diff_tools import plot_y_slice_time_magnitudes
+from time_dep_diff import TimeDependentDiffusion, plot_y_slice_time_magnitudes
 
-def main():
-    time_step_size = 0.01
-    x_length = 1.0
-    y_length = 1.0
-    n_steps = 100
-    total_time = 1.0
-    diffusion_coefficient = 0.01
 
-    time_diffusion = TimeDependentDiffusion(time_step_size, 
-                                            x_length, 
-                                            y_length, 
-                                            n_steps, 
-                                            total_time, 
-                                            diffusion_coefficient, 
+def time_dep_diff_uniform(time_step_size, x_length, y_length, n_steps, total_time, diffusion_coefficient):
+    time_diffusion = TimeDependentDiffusion(time_step_size,
+                                            x_length,
+                                            y_length,
+                                            n_steps,
+                                            total_time,
+                                            diffusion_coefficient,
                                             lambda x, y: 1)
     
-    solution = time_diffusion.solve()
+    time_diffusion.solve()
     time_diffusion.plot_animation()
 
-
-    """
     y_slice = 0.5
     time_diffusion.plot_y_slice(y_slice)
-
-    analytical_solution = time_diffusion.analytical_solution(100, 1.0, 100)
-
-    print(analytical_solution)
 
     time_index = 100
     time_diffusion.compare_solutions(time_index)
 
+    del time_diffusion
+
+def time_dep_diff_linear_xy(time_step_size, x_length, y_length, n_steps, total_time, diffusion_coefficient):
     time_diffusion_lin = TimeDependentDiffusion(time_step_size, 
                                                 x_length, 
                                                 y_length, 
@@ -45,6 +37,9 @@ def main():
     time_diffusion_lin.solve()
     time_diffusion_lin.plot_animation()
 
+    del time_diffusion_lin
+
+def time_dep_diff_sin(time_step_size, x_length, y_length, n_steps, total_time, diffusion_coefficient):
     time_diffusion_sin = TimeDependentDiffusion(time_step_size, 
                                                 x_length, 
                                                 y_length, 
@@ -55,17 +50,43 @@ def main():
     
     time_diffusion_sin.solve()
     time_diffusion_sin.plot_animation()
-    
-    time_test_array = [1.0, 0.1, 0.01, 0.001]
 
+    del time_diffusion_sin
+
+def time_dep_diff_time_magnitudes(time_test_array, time_step_size, x_length, y_length, n_steps, total_time, diffusion_coefficient):
     plot_y_slice_time_magnitudes(time_step_size, 
                                  x_length, 
                                  y_length, 
                                  n_steps, 
                                  diffusion_coefficient,
                                  time_test_array)
-                                """
+    
+
+def main():
+    return
+
+
 
 
 if __name__ == '__main__':
-    main()
+    time_step_size = 0.00001
+    x_length = 1.0
+    y_length = 1.0
+    n_steps = 100
+    total_time = 1.0
+    diffusion_coefficient = 1.0
+
+    time_dep_diff_uniform(time_step_size, x_length, y_length, n_steps, total_time, diffusion_coefficient)
+
+    time_dep_diff_linear_xy(time_step_size, x_length, y_length, n_steps, total_time, diffusion_coefficient)
+
+    time_dep_diff_sin(time_step_size, x_length, y_length, n_steps, total_time, diffusion_coefficient)
+
+
+    time_test_array = [1.0, 0.1, 0.01, 0.001]
+
+    time_dep_diff_time_magnitudes(time_test_array, time_step_size, x_length, y_length, n_steps, total_time, diffusion_coefficient)
+
+
+
+    cProfile.run('main()')

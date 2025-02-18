@@ -1,0 +1,30 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "ScientificComputing_Set1"
+version = "0.2"
+description = "A collection of classes to complete Assignment Set 1 for Scientific Computing"
+authors = [
+    { name="Victoria Peterson" },
+    { name="Karolina Chlopicka" },
+    { name="Paul Jungnickel" }
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = ["License :: OSI Approved :: MIT License"]
+dependencies = [
+    "matplotlib",
+    "numpy",
+    "scipy",
+    "numba",
+    "taichi",
+    "cupy"
+]
+
+[project.urls]
+Home = "https://github.com/VictorianHues/ScientificComputing_Set1"
+
+[project.scripts]
+run_main_vibr_string = "src.main_vibr_string:main"

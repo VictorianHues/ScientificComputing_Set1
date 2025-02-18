@@ -3,10 +3,84 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import concurrent.futures
 
-from finite_difference import fast_solve
-
 from scipy.special import erfc
+from numba import jit, njit, prange
 
+@njit
+def finite_dif_method(c_mesh_new, 
+                      t, i, j, 
+                      c_mesh, 
+                      time_step_size, 
+                      diffusion_coefficient, 
+                      x_step_size, 
+                      n_steps):
+    c_mesh_new[i, j] = (
+        c_mesh[t, i, j] +
+        (time_step_size * diffusion_coefficient / x_step_size**2) *
+        (c_mesh[t, (i+1)% n_steps, j] + c_mesh[t, (i-1)% n_steps, j] + c_mesh[t, i, j+1] + c_mesh[t, i, j-1 ] - 4 * c_mesh[t, i, j])
+    )
+    
+
+@njit(parallel=True)
+def fast_solve(c, 
+               time_step_num, 
+               n_steps, 
+               time_step_size, 
+               diffusion_coefficient, 
+               x_step_size):
+    for t in range(0, time_step_num - 1):
+        new_c = c[t].copy()  
+        
+        for i in prange(n_steps):
+            for j in range(1, n_steps - 1):
+                finite_dif_method(new_c, 
+                                  t, i, j, 
+                                  c, 
+                                  time_step_size, 
+                                  diffusion_coefficient, 
+                                  x_step_size, 
+                                  n_steps)
+
+        c[t+1] = new_c
+
+        # Top and Bottom Boundaries
+        c[t+1, :, -1] = c[t,:,-1]
+        c[t+1, :, 0] = 0.0
+
+    return c
+
+def plot_y_slice_time_magnitudes(time_step_size, 
+                                 x_length, 
+                                 y_length, 
+                                 n_steps, 
+                                 diffusion_coefficient,
+                                 time_array):
+    
+    plt.figure(figsize=(10, 6))
+    plt.title("Time Slice Magnitudes")
+    plt.xlabel("X")
+    plt.ylabel("Concentration")
+
+    for time in time_array:
+        print("Time: ", time)
+        time_diffusion = TimeDependentDiffusion(time_step_size, 
+                                                x_length, 
+                                                y_length, 
+                                                n_steps, 
+                                                time, 
+                                                diffusion_coefficient, 
+                                                lambda x, y: 1)
+        
+        solution = time_diffusion.solve()
+
+        x_idx = np.abs(time_diffusion.x_points - n_steps//2).argmin()
+
+        plt.plot(time_diffusion.y_points, 
+                 solution[-1, x_idx, :], 
+                 label=f"Time: {time}")
+    
+    plt.legend()
+    plt.show()
 
 
 class TimeDependentDiffusion:
@@ -34,40 +108,26 @@ class TimeDependentDiffusion:
 
         self.time_step_num = int(self.total_time / self.time_step_size)
 
+        print(f"Time step number: {self.time_step_num}")
+        print(f"X steps: {self.n_steps}")
+        print(f"Y steps: {self.n_steps}")
+
         self.c = np.zeros((self.time_step_num, self.n_steps, self.n_steps))
 
         self.c[0, :, -1] = self.initial_condition_func(self.x_points, self.y_points)
         self.c[0, :, 0] = 0.0
 
-        stable_val = (4 * self.diffusion_coefficient * self.time_step_size) / (self.x_step_size/2**2)
+        stable_val = (4 * self.diffusion_coefficient * self.time_step_size) / (self.x_step_size**2)
         if stable_val > 1.0:
             raise ValueError(f"Unstable solution, please use smaller diffusion coefficient or time step size. Current value: {stable_val}")
 
+
     def solve(self):
         self.c = fast_solve(self.c, self.time_step_num, self.n_steps, self.time_step_size, self.diffusion_coefficient, self.x_step_size)
-        # for t in range(1, self.time_step_num - 1):
-        #     new_c = self.c[t].copy()  
-            
-        #     for i in range(self.n_steps):
-        #         for j in range(1, self.n_steps - 1):
-        #             new_c[i, j] = (
-        #                 self.c[t, i, j] +
-        #                 (self.time_step_size * self.diffusion_coefficient / self.x_step_size**2) *
-        #                 (self.c[t, (i+1)% self.n_steps, j] + self.c[t, (i-1)% self.n_steps, j] + self.c[t, i, j+1] + self.c[t, i, j-1 ] - 4 * self.c[t, i, j])
-        #             )
-
-        #     # Left and Right Boundaries
-        #     #new_c[0, :] = new_c[-2, :]
-        #     #new_c[-1, :] = new_c[1, :]
-
-        #     self.c[t+1] = new_c
-
-        #     # Top and Bottom Boundaries
-        #     self.c[t+1, :, -1] = self.initial_condition_func(self.x_points, self.y_points)
-        #     self.c[t+1, :, 0] = 0.0
-
+        
         return self.c
     
+
     def plot_animation(self):
         fig, ax = plt.subplots()
         heatmap = ax.imshow(self.c[0], cmap="hot", origin="lower", extent=[0, self.x_length, 0, self.y_length])
@@ -80,7 +140,7 @@ class TimeDependentDiffusion:
 
         def update(frame):
             heatmap.set_array(self.c[frame].T) 
-            ax.set_title(f"Time-Dependent Diffusion (t = {frame/self.time_step_num})")
+            ax.set_title(f"Time-Dependent Diffusion")
             return heatmap,
 
         ani = animation.FuncAnimation(fig, update, frames=self.time_step_num, interval=50, blit=False)
