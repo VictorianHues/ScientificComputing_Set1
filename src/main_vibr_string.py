@@ -24,6 +24,8 @@ def vibrating_string_sin(length,
     string.plot_heat_map()
     string.plot_animation(save_name)
 
+    string.plot_time_steps()
+
 
 def vibrating_string_exp(length,
                             spatial_points,
@@ -43,6 +45,9 @@ def vibrating_string_exp(length,
         string.solve()
         string.plot_heat_map()
         string.plot_animation(save_name)
+
+
+        string.plot_time_steps()
 
 
 def main():

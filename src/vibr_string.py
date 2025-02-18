@@ -104,9 +104,21 @@ class VibratingString:
             line.set_ydata(self.Psi_grid[n])
             return line,
 
-        update_interval = max(1, self.time_steps // 200)  # Keep ~200 frames for smooth animation
+        update_interval = max(1, self.time_steps // 200)
         ani = animation.FuncAnimation(fig, update, frames=range(0, self.time_steps, update_interval), blit=True)
 
         ani.save(gif_filepath, writer='pillow', fps=120)
 
+        plt.show()
+
+    def plot_time_steps(self):
+        time_steps = np.arange(0, self.time_steps, 250)
+        colors = plt.cm.viridis(np.linspace(0, 1, len(time_steps)))
+
+        plt.figure(figsize=(8, 5))
+        for i, color in zip(time_steps, colors):
+            plt.plot(self.x_points, self.Psi_grid[i], label=f'Time Step {i}', color=color)
+        plt.xlabel('X Position')
+        plt.ylabel('Y Position')
+        plt.title(f'Vibrating String at Different Time Steps')
         plt.show()
