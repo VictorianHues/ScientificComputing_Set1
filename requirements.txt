@@ -1,7 +1,6 @@
 matplotlib
 numpy
 scipy
-json
 numba
 taichi
 cupy
