@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from numba import jit, njit
+from numba import jit, njit, prange
 
 
 
@@ -56,23 +56,26 @@ def jacobi(c_old, c_new, max_iter, n_steps, tolerance):
 
 
 
+@njit
+def SOR_calc(c, t, i, j, width, omega, mask):
+    c[t+1, i, j] = (mask[i,j] 
+                    * (omega / 4.0 * (c[t, i+1, j] + c[t+1, i-1, j] + c[t+1, i, (j-1)% width] 
+                                        + c[t, i, (j+1)% width ])+ (1-omega) * c[t, i, j] ))
+
+
 
 @njit
 def SOR(c, omega, mask=None, tolerance= None):
+    print(omega)
     time_step_num, width, height = c.shape
     if mask is None:
         mask = np.ones(shape=c.shape[1:])
     for t in range(0, time_step_num - 1):
         
-        for i in range(1, height -1):
+        for i in prange(1, height -1):
             c[t+1, i, -1] = c[t, i, -1] # to avoid adding sink on left side
-            for j in range(width):
-                c[t+1, i, j] = mask[i,j] * (omega / 4.0 * (c[t, i+1, j] + c[t+1, i-1, j] + c[t+1, i, (j-1)% width] + c[t, i, (j+1)% width ])
-                    + (1-omega) * c[t, i, j] )
-                
-        
-                    
-
+            for j in prange(width):
+                SOR_calc(c, t, i, j, width, omega, mask)
 
         # Top and Bottom Boundaries
         c[t+1, -1] = c[t, -1]

@@ -1,6 +1,4 @@
 import numpy as np
-import time
-import cProfile
 
 from time_dep_diff import TimeDependentDiffusion, plot_y_slice_time_magnitudes
 
@@ -20,8 +18,10 @@ def time_dep_diff_uniform(time_step_size, x_length, y_length, n_steps, total_tim
     y_slice = 0.5
     time_diffusion.plot_y_slice(y_slice)
 
-    time_index = 100
+    time_index = 1000
     time_diffusion.compare_solutions(time_index)
+
+    time_diffusion.compare_solutions_full_range(time_index)
 
     del time_diffusion
 
@@ -86,7 +86,3 @@ if __name__ == '__main__':
     time_test_array = [1.0, 0.1, 0.01, 0.001]
 
     time_dep_diff_time_magnitudes(time_test_array, time_step_size, x_length, y_length, n_steps, total_time, diffusion_coefficient)
-
-
-
-    cProfile.run('main()')

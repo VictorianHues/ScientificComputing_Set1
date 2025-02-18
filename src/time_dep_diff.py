@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import concurrent.futures
 
 from scipy.special import erfc
 from numba import jit, njit, prange
@@ -191,5 +190,27 @@ class TimeDependentDiffusion:
         ax2.plot(self.x_points, error, 'g-', label="Error")
         ax2.set_ylabel("Error")
         ax2.legend(loc='lower left')
+
+        plt.show()
+
+    def compare_solutions_full_range(self, time_index):
+        selected_time = self.time_step_size * time_index  # Corresponding time
+
+        analytical_solution = self.analytical_solution(self.x_points, selected_time)
+
+        numerical = self.c[time_index, :, :]
+
+        difference = np.abs(numerical - analytical_solution)
+
+        rmse = np.sqrt(np.mean(difference**2))
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+        heatmap = ax.imshow(np.transpose(difference), cmap="coolwarm", origin="lower", extent=[0, self.x_length, 0, self.y_length])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_title(f"Numerical-Analytical Difference at t = {selected_time:.2f}, RMSE = {rmse:.5f}")
+
+        cbar = plt.colorbar(heatmap)
+        cbar.set_label("Difference")
 
         plt.show()

@@ -1,15 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import time
+
+
 from SOR_diff import SORDiffusion
 from jacobi_iteration import Jacobi
-from time_dep_diff_tools import plot_y_slice_time_magnitudes
+from numba import njit, prange
+from finite_difference import fast_solve, SOR
 
 def main():
     x_length = 1.0
     y_length = 1.0
     n_steps = 50
-    time_step_num = 10000
-    omega = 0.1
+    time_step_num = 100000
+    omega = 1.8
     # """
     sor_diffusion = SORDiffusion(
                                             x_length, 
@@ -19,14 +23,20 @@ def main():
                                             omega, 
                                             lambda x, y: 1)
     
-    solution = sor_diffusion.solve(1e-4)
+    solution, end_time = sor_diffusion.solve(1e-16)
+
     sor_diffusion.plot_animation()
-    # sor_diffusion.plot_y_slice(0)
-    
-    
+    #sor_diffusion.plot_y_slice(0)
+
+    sor_diffusion.plot_single_frame(end_time)
+    sor_diffusion.plot_analytical_sol()
+
+    sor_diffusion.compare_solutions_full_range(end_time)
+
 def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
     Ns = np.zeros_like(tolerances)
-    for i, tolerance in enumerate(tolerances):
+    for i in range(len(tolerances)):
+        tolerance = tolerances[i]
         
         x_length = 1.0
         y_length = 1.0
@@ -34,19 +44,63 @@ def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
         time_step_num = max_steps
         # omega = 0.1
         # """
+
         sor_diffusion = SORDiffusion(
-                                                x_length, 
-                                                y_length, 
-                                                n_steps, 
-                                                time_step_num, 
-                                                omega, 
-                                                lambda x, y: 1,
-                                                mask)
+                                    x_length, 
+                                    y_length, 
+                                    n_steps, 
+                                    time_step_num, 
+                                    omega, 
+                                    lambda x, y: 1,
+                                    mask)
         
         solution, t = sor_diffusion.solve(tolerance=tolerance)
-        # sor_diffusion.plot_animation()    
+        sor_diffusion.plot_animation()    
         Ns[i] = t
     return Ns
+
+# @njit(parallel=True)  
+# def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
+#     Ns = np.zeros_like(tolerances)
+#     for i in prange(len(tolerances)):
+#         tolerance = tolerances[i]
+        
+#         x_length = 1.0
+#         y_length = 1.0
+#         n_steps = 50
+#         time_step_num = max_steps
+#         # omega = 0.1
+#         # """
+        
+#         x_points = np.linspace(0, x_length, n_steps)
+#         y_points = np.linspace(0, y_length, n_steps)
+
+#         x_step_size = x_length / (n_steps - 1)
+#         y_step_size = y_length / (n_steps - 1)
+
+#         c = np.zeros((time_step_num, n_steps, n_steps))
+
+#         c[0, -1, :] = 1.0
+#         c[0, 0, :] = 0.0
+
+#         solution, t = SOR(c, omega, mask=mask, tolerance=tolerance)
+#         if tolerance is not None:
+#             print('finished after ', t, ' iterations')
+
+
+#         # sor_diffusion = SORDiffusion(
+#         #                             x_length, 
+#         #                             y_length, 
+#         #                             n_steps, 
+#         #                             time_step_num, 
+#         #                             omega, 
+#         #                             lambda x, y: 1,
+#         #                             mask)
+        
+#         # solution, t = sor_diffusion.solve(tolerance=tolerance)
+#         # sor_diffusion.plot_animation()    
+#         Ns[i] = t
+#     return Ns
     
     
 def iter_to_convergence_Jacobi(tolerances):
@@ -88,7 +142,7 @@ def iter_to_convergence_plot():
     plt.ylabel('N')
     plt.title('Number of Iterations to Converge')
     plt.savefig('plots/num_iter_vs_tol.png', dpi=600)
-    # plt.show()
+    plt.show()
     
     
 def min_val_approximation(x, y, dx = 1):
@@ -130,8 +184,14 @@ def optimal_omega_plot(mask = None, title='No Obstructions', file ='plots/opt_om
         
 
 if __name__ == '__main__':
-    # main()
-    # iter_to_convergence_plot()
-    optimal_omega_plot()
+    start_time = time.time()
+    main()
+    #iter_to_convergence_plot()
+    #optimal_omega_plot()
+
+    end_time = time.time()
+
+    print(f"Execution time: {end_time - start_time} seconds")
+
     
     
