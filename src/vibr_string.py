@@ -90,7 +90,7 @@ class VibratingString:
     def plot_animation(self, gif_filename="vibrating_string.gif"):
         base_dir = os.path.dirname(os.path.dirname(__file__)) 
         animations_dir = os.path.join(base_dir, 'animations')
-        print(animations_dir)
+
         os.makedirs(animations_dir, exist_ok=True)
 
         gif_filepath = os.path.join(animations_dir, gif_filename)
