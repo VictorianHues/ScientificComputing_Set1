@@ -156,7 +156,7 @@ def min_val_approximation(x, y, dx = 1):
     return x_min, y_min
     
     
-def optimal_omega_plot(mask = None, title='No Obstructions', file ='plots/opt_omega_full.png' ):
+def optimal_omega_plot(mask = None):
     omegas = np.linspace(0.01, 2, 500)
     Ns = np.zeros_like(omegas)
     tolerance = [1e-8]
@@ -164,24 +164,12 @@ def optimal_omega_plot(mask = None, title='No Obstructions', file ='plots/opt_om
     for i, omega in enumerate(omegas):
         N = iter_to_convergence_SOR(tolerance, omega, max_steps=100000, mask = mask)
         Ns[i] = N
-        
-    plt.figure(figsize=[10,3])
-    plt.tight_layout()
-    
-    plt.subplots_adjust(bottom=0.15)
-    plt.plot(omegas, Ns)
+
     w_min, N_min = min_val_approximation(omegas, Ns)
-    # print(p, N_min)
     print('Minimum omega at {:.5f}'.format( w_min))
-    plt.grid()
-    # plt.xscale('log')
-    plt.yscale('log')
-    plt.xlabel(r'$\omega$')
-    plt.ylabel('Number of iterations')
-    plt.title(title + r',  $\omega_{min} = ${.2f}'.format(w_min))
-    plt.ylim([2e2,9e4])
-    plt.savefig(file, dpi=600)
-        
+    print(f'Number of iteration to achive minimum omega is {N_min}')
+    return w_min, N_min
+    
 
 if __name__ == '__main__':
     start_time = time.time()
