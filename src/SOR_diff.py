@@ -17,7 +17,8 @@ class SORDiffusion:
                  time_step_num : float,
                  omega : float,
                  initial_condition_func : callable,
-                 mask = None):
+                 mask = None,
+                 insulated= None):
         self.x_length = x_length
         self.y_length = y_length
         self.n_steps = n_steps
@@ -25,6 +26,7 @@ class SORDiffusion:
         self.omega = omega
         self.initial_condition_func = initial_condition_func
         self.mask = mask
+        self.insulated = insulated
 
         self.x_points = np.linspace(0, self.x_length, self.n_steps)
         self.y_points = np.linspace(0, self.y_length, self.n_steps)
@@ -42,7 +44,7 @@ class SORDiffusion:
 
     def solve(self, tolerance = None):
         
-        _, t, tol = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance)
+        _, t, tol = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance, insulated=self.insulated)
         if tolerance is not None:
             print('finished at iteration', t, ' with tolerance ', tol)
         return self.c, t, tol

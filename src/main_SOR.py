@@ -4,7 +4,7 @@ from SOR_diff import SORDiffusion
 from jacobi_iteration import Jacobi
 from time_dep_diff_tools import plot_y_slice_time_magnitudes
 
-def main(mask=None):
+def main(mask=None, insulated = None):
     x_length = 1.0
     y_length = 1.0
     n_steps = 50
@@ -18,7 +18,8 @@ def main(mask=None):
                                             time_step_num, 
                                             omega, 
                                             lambda x, y: 1, 
-                                            mask=mask)
+                                            mask=mask,
+                                            insulated = insulated)
     
     solution = sor_diffusion.solve(1e-4)
     sor_diffusion.plot_animation()
@@ -232,15 +233,16 @@ def optimal_omega_plot_inv(mask = None, title='No Sinks', file ='plots/opt_omega
 
 if __name__ == '__main__':
     
-    # mask = np.ones([50, 50])    
-    # mask[-10,5:10] = 0
-    # print(mask)
-    # main(mask=mask)
+    mask = np.ones([50, 50])    
+    mask[2,5:10] = 0
+    insulated = 1 - mask
+    print(mask)
+    main(mask=mask, insulated=insulated)
     # main()
     # iter_to_convergence_plot()
     # iter_to_convergence_plot_inv()
     # optimal_omega_plot_inv(num_iter=5000, grid_size=100)
-    grid_sizes = [40,50,60,100]
-    optimal_omega_plot(grid_sizes=grid_sizes, tolerance=1e-12)
+    # grid_sizes = [40,50,60,100]
+    # optimal_omega_plot(grid_sizes=grid_sizes, tolerance=1e-12)
     
     
