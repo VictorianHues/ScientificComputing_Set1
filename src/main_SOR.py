@@ -25,13 +25,13 @@ def main(mask=None):
     # sor_diffusion.plot_y_slice(0)
     
     
-def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
+def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None, grid_size = 50):
     Ns = np.zeros_like(tolerances)
     for i, tolerance in enumerate(tolerances):
         
         x_length = 1.0
         y_length = 1.0
-        n_steps = 50
+        n_steps = grid_size
         time_step_num = max_steps
         # omega = 0.1
         # """
@@ -153,8 +153,8 @@ def iter_to_convergence_plot_inv():
     plt.legend()
     # plt.xscale('log')
     plt.yscale('log')
-    plt.ylabel(r'$\varepsilon$')
-    plt.xlabel('iteration')
+    plt.ylabel(r'$\varepsilon^k$', rotation=0)
+    plt.xlabel('k')
     plt.title('Number of Iterations to Converge')
     plt.savefig('plots/num_iter_vs_tol_inv.png', dpi=600)
     # plt.show()
@@ -170,31 +170,34 @@ def min_val_approximation(x, y, dx = 1):
     return x_min, y_min
     
     
-def optimal_omega_plot(mask = None, title='No Obstructions', file ='plots/opt_omega_full.png' ):
+def optimal_omega_plot(mask = None, title='No Obstructions', file ='plots/opt_omega_full.png', grid_sizes=[50], tolerance=1e-8 ):
     omegas = np.linspace(0.01, 2, 500)
     Ns = np.zeros_like(omegas)
-    tolerance = [1e-8]
+    tolerance = [tolerance]
     
-    for i, omega in enumerate(omegas):
-        N = iter_to_convergence_SOR(tolerance, omega, max_steps=100000, mask = mask)
-        Ns[i] = N
-        
     plt.figure(figsize=[10,3])
     plt.tight_layout()
     
     plt.subplots_adjust(bottom=0.15)
-    plt.plot(omegas, Ns)
-    w_min, N_min = min_val_approximation(omegas, Ns)
-    # print(p, N_min)
-    print('Minimum omega at {:.5f}'.format( w_min))
+    for grid_size in grid_sizes:
+        for i, omega in enumerate(omegas):
+            N = iter_to_convergence_SOR(tolerance, omega, max_steps=100000, mask = mask,grid_size=grid_size)
+            Ns[i] = N
+            
+        plt.plot(omegas, Ns, label=grid_size)
+        w_min, N_min = min_val_approximation(omegas, Ns)
+        # print(p, N_min)
+        print('Minimum omega at {:.5f} with {} samples'.format( w_min, N_min))
     plt.grid()
-    plt.legend()
+    if len(grid_sizes) >1:
+        plt.legend(title='grid size')
+    # plt.legend()
     # plt.xscale('log')
     plt.yscale('log')
     plt.xlabel(r'$\omega$')
     plt.ylabel('N')
-    plt.title(title + r',  $\omega_{min} = ${:.2f}'.format(w_min))
-    plt.ylim([2e2,9e4])
+    plt.title(title + r', $\omega_{min} = $' + '{:.2f}'.format(w_min))
+    # plt.ylim([2e2,9e4])
     plt.savefig(file, dpi=600)
     
     
@@ -216,7 +219,7 @@ def optimal_omega_plot_inv(mask = None, title='No Sinks', file ='plots/opt_omega
     # print(p, N_min)
     print('Minimum omega at {:.5f}'.format( w_min))
     plt.grid()
-    plt.legend()
+    # plt.legend()
     # plt.xscale('log')
     plt.yscale('log')
     plt.xlabel(r'$\omega$')
@@ -229,14 +232,15 @@ def optimal_omega_plot_inv(mask = None, title='No Sinks', file ='plots/opt_omega
 
 if __name__ == '__main__':
     
-    mask = np.ones([50, 50])    
-    mask[-10,5:10] = 0
-    print(mask)
-    main(mask=mask)
+    # mask = np.ones([50, 50])    
+    # mask[-10,5:10] = 0
+    # print(mask)
+    # main(mask=mask)
     # main()
     # iter_to_convergence_plot()
     # iter_to_convergence_plot_inv()
     # optimal_omega_plot_inv(num_iter=5000, grid_size=100)
-    # optimal_omega_plot()
+    grid_sizes = [40,50,60,100]
+    optimal_omega_plot(grid_sizes=grid_sizes, tolerance=1e-12)
     
     

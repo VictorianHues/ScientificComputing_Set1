@@ -34,8 +34,8 @@ class SORDiffusion:
 
         self.c = np.zeros((self.time_step_num, self.n_steps, self.n_steps))
 
-        self.c[0, -1, :] = self.initial_condition_func(self.x_points, self.y_points)
-        self.c[0, 0, :] = 0.0
+        self.c[0, 0, :] = self.initial_condition_func(self.x_points, self.y_points)
+        self.c[0, -1, :] = 0.0
  
         # if self.omega > 2.0:
         #     raise ValueError(f"SOR becomes unstable for omega > 2, please use a smaller value. Current value: {self.omega}")
