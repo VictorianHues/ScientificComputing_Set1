@@ -66,7 +66,6 @@ def SOR_calc(c, t, i, j, width, omega, mask):
 
 @njit
 def SOR(c, omega, mask=None, tolerance= None):
-    print(omega)
     time_step_num, width, height = c.shape
     if mask is None:
         mask = np.ones(shape=c.shape[1:])

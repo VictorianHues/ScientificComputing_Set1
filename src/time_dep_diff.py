@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -127,7 +128,15 @@ class TimeDependentDiffusion:
         return self.c
     
 
-    def plot_animation(self):
+    def plot_animation(self, save_name="animation.gif"):
+        base_dir = os.path.dirname(os.path.dirname(__file__)) 
+        animations_dir = os.path.join(base_dir, 'animations')
+
+        os.makedirs(animations_dir, exist_ok=True)
+
+        gif_filepath = os.path.join(animations_dir, save_name)
+
+
         fig, ax = plt.subplots()
         heatmap = ax.imshow(self.c[0], cmap="hot", origin="lower", extent=[0, self.x_length, 0, self.y_length])
         ax.set_xlabel("X")
@@ -139,10 +148,11 @@ class TimeDependentDiffusion:
 
         def update(frame):
             heatmap.set_array(self.c[frame].T) 
-            ax.set_title(f"Time-Dependent Diffusion")
             return heatmap,
 
-        ani = animation.FuncAnimation(fig, update, frames=self.time_step_num, interval=50, blit=False)
+        ani = animation.FuncAnimation(fig, update, frames=range(0, self.time_step_num, 100), interval=50, blit=False)
+
+        ani.save(gif_filepath, writer='pillow', fps=120)
 
         plt.show()
 
