@@ -19,9 +19,14 @@ class Jacobi:
         self.c_old = self.c_new.copy()
 
     def solve(self):
-        end_iteration = jacobi(self.c_old, self.c_new, self.max_iter, self.n_steps, self.epsilon)
+        self.max_iter, tol = jacobi(self.c_old, self.c_new, self.max_iter, self.n_steps, self.epsilon)
+        # for iteration in range(self.max_iter):
+            
+        #     # Top and Bottom Boundaries
+        #     self.c_old[:, -1] = 1.0
+        #     self.c_old[:, 0] = 0.0
 
-        return self.c_new, end_iteration
+        return self.c_new, self.max_iter
     
 
     def plot_last_frame(self):

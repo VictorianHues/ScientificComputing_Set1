@@ -49,10 +49,11 @@ def jacobi(c_old, c_new, max_iter, n_steps, tolerance):
         # Stopping criterion
         delta = np.max(np.abs(c_new - c_old))
         if delta < tolerance:
-            return  iteration
+            return  iteration, delta
 
         # Update step
         c_old = c_new.copy()
+    return iteration, delta
 
 
 
@@ -65,27 +66,41 @@ def SOR_calc(c, t, i, j, width, omega, mask):
 
 
 @njit
-def SOR(c, omega, mask=None, tolerance= None):
+def SOR(c, omega, mask=None, tolerance= None, insulated=None):
     time_step_num, width, height = c.shape
     if mask is None:
         mask = np.ones(shape=c.shape[1:])
+    if insulated is None:
+        insulated = np.zeros(shape=c.shape[1:])
     for t in range(0, time_step_num - 1):
-        
-        for i in prange(1, height -1):
-            c[t+1, i, -1] = c[t, i, -1] # to avoid adding sink on left side
-            for j in prange(width):
-                SOR_calc(c, t, i, j, width, omega, mask)
-
         # Top and Bottom Boundaries
         c[t+1, -1] = c[t, -1]
         c[t+1, 0] = 0.0
+        for i in range(1, height -1):
+            c[t+1, i, -1] = c[t, i, -1] # to avoid adding sink on left side
+            for j in range(width):
+                c0 = c[t, i, j]
+                c1 = c0 if insulated[i+1, j] else c[t, i+1, j]
+                c2 = c0 if insulated[i-1, j] else c[t+1, i-1, j]
+                c3 = c0 if insulated[i, (j-1)%width] else c[t+1, i, (j-1)% width] 
+                c4 = c0 if insulated[i, (j+1)%width] else c[t, i, (j+1)% width ]
+                c[t+1, i, j] = mask[i,j] * (omega / 4.0 * (c1 + c2 + c3+ c4)
+                    + (1-omega) * c0 )
+                
+        
+                    
+
+
+        # # Top and Bottom Boundaries
+        # c[t+1, 0] = c[t, 0]
+        # c[t+1, -1] = 0.0
 
         if tolerance is not None:
             eps = np.max(np.abs(c[t+1] - c[t]))
             if eps < tolerance:
                 break
 
-    return c, t
+    return c, t, eps
 
 
 # def SOR_until_tolerance(c, omega, tolerance, mask=None):

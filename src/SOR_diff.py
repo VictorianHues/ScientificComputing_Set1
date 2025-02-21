@@ -16,7 +16,8 @@ class SORDiffusion:
                  time_step_num : float,
                  omega : float,
                  initial_condition_func : callable,
-                 mask = None):
+                 mask = None,
+                 insulated= None):
         self.x_length = x_length
         self.y_length = y_length
         self.n_steps = n_steps
@@ -24,6 +25,7 @@ class SORDiffusion:
         self.omega = omega
         self.initial_condition_func = initial_condition_func
         self.mask = mask
+        self.insulated = insulated
 
         self.x_points = np.linspace(0, self.x_length, self.n_steps)
         self.y_points = np.linspace(0, self.y_length, self.n_steps)
@@ -41,12 +43,14 @@ class SORDiffusion:
 
     def solve(self, tolerance = None):
         
-        _, self.end_time = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance)
+        _, t, tol = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance, insulated=self.insulated)
         if tolerance is not None:
-            print('finished after ', self.end_time, ' iterations')
-        return self.c, self.end_time
+            # print('finished at iteration', t, ' with tolerance ', tol)
+            pass
+        self.end_time = t
+        return self.c, t, tol
     
-    def plot_animation(self):
+    def plot_animation(self, skip_n=100):
         fig, ax = plt.subplots()
         heatmap = ax.imshow(self.c[0], cmap="hot", origin="lower", extent=[0, self.x_length, 0, self.y_length])
         ax.set_xlabel("X")
@@ -61,7 +65,7 @@ class SORDiffusion:
             ax.set_title(f"Equilibrium Diffusion (frame = {frame})")
             return heatmap,
 
-        ani = animation.FuncAnimation(fig, update, frames=range(0, self.end_time, 100), interval=50, blit=False)
+        ani = animation.FuncAnimation(fig, update, frames=range(0, self.end_time, skip_n), interval=50, blit=False)
         plt.show()
 
     def plot_y_slice(self, x_val):
