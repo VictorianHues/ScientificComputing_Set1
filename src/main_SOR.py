@@ -85,7 +85,7 @@ def tol_after_N_Jacobi(Ns):
                                                 N)
         
         solution, t, tol = jacobi_diffusion.solve()
-        print(t, tol)
+        # print(t, tol)
         # sor_diffusion.plot_animation()    
         tolerances[i] = tol
     return tolerances
@@ -146,17 +146,23 @@ def iter_to_convergence_plot_inv():
     for omega in omegas:
         tolerances = tol_after_N_SOR(Ns, omega)
         plt.plot(Ns, tolerances, label=r'SOR, $\omega$ = {}'.format(omega))
+        num_pts = np.argmax(tolerances<1e-12)
+        lin_fit = np.polyfit(Ns[:num_pts], np.log10(tolerances[:num_pts]), deg=1)
+        print(omega, lin_fit[0], lin_fit[1])
     
     tolerances = tol_after_N_Jacobi(Ns)
     plt.plot(Ns, tolerances, label='Jacobi')
+    num_pts = np.argmax(tolerances<1e-12)
+    lin_fit = np.polyfit(Ns[:num_pts], np.log10(tolerances[:num_pts]), deg=1)
+    print('jacobi', lin_fit[0], lin_fit[1])
         
     plt.grid()
     plt.legend()
     # plt.xscale('log')
     plt.yscale('log')
-    plt.ylabel(r'$\varepsilon^k$', rotation=0)
-    plt.xlabel('k')
-    plt.title('Number of Iterations to Converge')
+    plt.ylabel(r'$\varepsilon^k$', rotation=0, fontsize=14)
+    plt.xlabel('iteration', fontsize=14)
+    # plt.title('Number of Iterations to Converge')
     plt.savefig('plots/num_iter_vs_tol_inv.png', dpi=600)
     # plt.show()
     
@@ -267,11 +273,14 @@ def optimal_omega_vs_N_plot(mask = None, title='No Obstructions', file ='plots/o
     # plt.legend()
     # plt.xscale('log')
     # plt.yscale('log')
-    plt.xlabel(r'grid size')
-    plt.ylabel(r'$\omega_{min}$')
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.xlabel(r'grid size', fontsize=20)
+    plt.ylabel(r'$\omega_{min}$', fontsize=20)
     # plt.title(title + r', $\omega_{min} = $' + '{:.2f}'.format(w_min))
     plt.ylim([1.8,2])
     plt.xlim([10,400])
+    plt.subplots_adjust(bottom=0.25)
     plt.savefig(file, dpi=600)
 
         
@@ -287,7 +296,7 @@ def a_maze():
     x_length = 1.0
     y_length = 1.0
     n_steps = 53
-    time_step_num = 1000000
+    time_step_num = 100000
     omega = 1.87
     # """
     sor_diffusion = SORDiffusion(
@@ -301,19 +310,24 @@ def a_maze():
                                             insulated = insulated)
     
     c, t, tol = sor_diffusion.solve(1e-9)
-    fig, ax = plt.subplots()
-    fig.tight_layout()
+    # sor_diffusion.plot_animation(skip_n=10)
+    fig, ax = plt.subplots(figsize=[6,5])
+    fig.subplots_adjust(left=0.07, bottom=0.06, right=0.85, top=0.95)
+    # fig.tight_layout()
+    # fig.subplots_adjust(right=0.02)
     # ax = axs[0]
     # ax.imshow(mask,cmap="hot",origin="lower",aspect='equal')
     # ax = axs[1]
     # ax.set_xlabel("X")
     # ax.set_ylabel("Y")
     # ax.set_title("Equilibrium Diffusion")
-    print(c[t].shape, mask.shape)
+    # print(c[t].shape, mask.shape)
     heatmap = ax.imshow(c[t], cmap="hot", origin="lower",aspect='equal' ) #extent=[0,x_length, 0, y_length])
-
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     cbar = plt.colorbar(heatmap, fraction=0.046, pad=0.04)
-    cbar.set_label("Concentration", fontsize=14)
+    cbar.set_label("Concentration", fontsize=20)
+    cbar.ax.tick_params(labelsize=16)
     # sor_diffusion.plot_y_slice(0)
     plt.savefig('plots/maze_heatmap.png', dpi=600)
     plt.show()
@@ -333,10 +347,10 @@ if __name__ == '__main__':
     # main(mask=mask, insulated=insulated)
     # main()
     # iter_to_convergence_plot()
-    # iter_to_convergence_plot_inv()
+    iter_to_convergence_plot_inv()
     # optimal_omega_plot_inv(num_iter=5000, grid_size=100)
-    grid_sizes = [40,50,60,100]
-    optimal_omega_plot(grid_sizes=grid_sizes, tolerance=1e-12)
+    # grid_sizes = [40,50,60,100]
+    # optimal_omega_plot(grid_sizes=grid_sizes, tolerance=1e-12)
 
 
     # a_maze()
