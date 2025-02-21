@@ -18,12 +18,12 @@ def main():
     print(f"Converged after {end_iteration} iterations")
     print(solution)
 
-    jacobi_diffusion.plot_last_frame()
-    jacobi_diffusion.plot_analytical_sol()
+    #jacobi_diffusion.plot_last_frame()
+    #jacobi_diffusion.plot_analytical_sol()
 
     jacobi_diffusion.compare_solutions()
 
-    jacobi_diffusion.compare_solutions_full_range()
+    #jacobi_diffusion.compare_solutions_full_range()
 
 
 

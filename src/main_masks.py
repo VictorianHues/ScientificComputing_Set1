@@ -21,7 +21,6 @@ def main(mask = None):
                                             n_steps, 
                                             time_step_num, 
                                             omega, 
-                                            lambda x, y: 1, 
                                             mask = mask)
     
     solution, end_time = sor_diffusion.solve(1e-16)
@@ -51,9 +50,9 @@ def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
                                     y_length, 
                                     n_steps, 
                                     time_step_num, 
-                                    omega, 
-                                    lambda x, y: 1,
+                                    omega,
                                     mask)
+
         
         solution, t = sor_diffusion.solve(tolerance=tolerance)
         #sor_diffusion.plot_animation()    
@@ -156,10 +155,10 @@ def min_val_approximation(x, y, dx = 1):
     return x_min, y_min
     
     
-def optimal_omega_plot(mask = None):
+def optimal_omega(mask = None):
     omegas = np.linspace(0.01, 2, 500)
     Ns = np.zeros_like(omegas)
-    tolerance = [1e-8]
+    tolerance = [1e-9]
     
     for i, omega in enumerate(omegas):
         N = iter_to_convergence_SOR(tolerance, omega, max_steps=100000, mask = mask)

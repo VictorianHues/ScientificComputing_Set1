@@ -15,14 +15,13 @@ class SORDiffusion:
                  n_steps : int,
                  time_step_num : float,
                  omega : float,
-                 initial_condition_func : callable,
                  mask = None):
+        
         self.x_length = x_length
         self.y_length = y_length
         self.n_steps = n_steps
         self.time_step_num = time_step_num
         self.omega = omega
-        self.initial_condition_func = initial_condition_func
         self.mask = mask
 
         self.x_points = np.linspace(0, self.x_length, self.n_steps)
@@ -33,7 +32,7 @@ class SORDiffusion:
 
         self.c = np.zeros((self.time_step_num, self.n_steps, self.n_steps))
 
-        self.c[0, -1, :] = self.initial_condition_func(self.x_points, self.y_points)
+        self.c[0, -1, :] = 1.0
         self.c[0, 0, :] = 0.0
  
         # if self.omega > 2.0:
@@ -76,12 +75,15 @@ class SORDiffusion:
     def plot_single_frame(self, time):
         fig, ax = plt.subplots(figsize = (10,8))
         heatmap = ax.imshow(self.c[time,:,:], cmap="hot", origin="lower", extent=[0, self.x_length, 0, self.y_length])
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-        ax.set_title(f"Numerical-Analytical Difference")
+        ax.set_xlabel("X", fontsize = 20)
+        plt.xticks(fontsize = 16)
+        plt.yticks(fontsize = 16)
+        ax.set_ylabel("Y", fontsize = 20)
+        #ax.set_title(f"Numerical-Analytical Difference")
 
         cbar = plt.colorbar(heatmap)
-        cbar.set_label("Difference")
+        cbar.set_label("Difference", fontsize = 20)
+        cbar.ax.tick_params(labelsize=16)
 
         plt.show()
     
@@ -112,13 +114,16 @@ class SORDiffusion:
         rmse = np.sqrt(np.mean(difference**2))
         print(f"Root Mean Squared Error: {rmse}")
 
-        fig, ax = plt.subplots(figsize=(10, 8))
+        fig, ax = plt.subplots(figsize=(7, 9))
         heatmap = ax.imshow(difference, cmap="coolwarm", origin="lower", extent=[0, self.x_length, 0, self.y_length])
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-        ax.set_title(f"Numerical-Analytical Dif at {time} (RMSE: {rmse})")
+        ax.set_xlabel("X", fontsize=20)
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize = 16)
+        ax.set_ylabel("Y", fontsize=20)
+        #ax.set_title(f"Numerical-Analytical Dif at {time} (RMSE: {rmse})")
 
-        cbar = plt.colorbar(heatmap)
-        cbar.set_label("Difference")
+        cbar = plt.colorbar(heatmap, fraction = 0.046, pad = 0.04)
+        cbar.set_label("Difference", fontsize=20)
+        cbar.ax.tick_params(labelsize=16)
 
         plt.show()

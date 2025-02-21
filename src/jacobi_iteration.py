@@ -61,20 +61,22 @@ class Jacobi:
 
         x_points = np.linspace(0, 1, self.n_steps)  # Extract x_points from c_new
 
-        fig, ax1 = plt.subplots(figsize=(8, 5))
+        fig, ax1 = plt.subplots(figsize=(8, 4))
 
-        ax1.plot(x_points, numerical, 'bo-', label="Numerical (Simulation)")
+        fig.subplots_adjust(bottom = 0.15)
+
+        ax1.plot(x_points, numerical, 'bo-', label="Numerical", markersize = 3)
         ax1.plot(x_points, analytical_solution, 'r--', label="Analytical")
-        ax1.set_xlabel("x")
-        ax1.set_ylabel("Concentration")
-        ax1.set_title(f"Comparison at equilibrium, Root Mean Squared Error = {rmse:.5f}")
-        ax1.legend(loc='upper left')
+        ax1.set_xlabel("x", fontsize=16)
+        ax1.set_ylabel("Concentration", fontsize=16)
+        #ax1.set_title(f"Comparison at equilibrium, Root Mean Squared Error = {rmse:.5f}")
+        ax1.legend(loc='upper left', fontsize=14)
         ax1.grid()
 
         ax2 = ax1.twinx()
         ax2.plot(x_points, error, 'g-', label="Error")
-        ax2.set_ylabel("Error")
-        ax2.legend(loc='lower left')
+        ax2.set_ylabel("Error", fontsize=16)
+        ax2.legend(loc='lower right', fontsize=14)
 
         plt.show()
 
