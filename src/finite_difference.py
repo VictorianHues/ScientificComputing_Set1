@@ -67,8 +67,8 @@ def SOR(c, omega, mask=None, tolerance= None, insulated=None):
         insulated = np.zeros(shape=c.shape[1:])
     for t in range(0, time_step_num - 1):
         # Top and Bottom Boundaries
-        c[t+1, 0] = c[t, 0]
-        c[t+1, -1] = 0.0
+        c[t+1, -1] = c[t, -1]
+        c[t+1, 0] = 0.0
         for i in range(1, height -1):
             c[t+1, i, -1] = c[t, i, -1] # to avoid adding sink on left side
             for j in range(width):

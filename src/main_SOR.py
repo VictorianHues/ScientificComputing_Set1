@@ -4,12 +4,12 @@ from SOR_diff import SORDiffusion
 from jacobi_iteration import Jacobi
 from time_dep_diff_tools import plot_y_slice_time_magnitudes
 
-def main(mask=None, insulated = None):
+def main(mask=None, insulated = None, grid_size=50):
     x_length = 1.0
     y_length = 1.0
-    n_steps = 50
-    time_step_num = 10000
-    omega = 0.1
+    n_steps = grid_size
+    time_step_num = 1000000
+    omega = 1.87
     # """
     sor_diffusion = SORDiffusion(
                                             x_length, 
@@ -22,7 +22,7 @@ def main(mask=None, insulated = None):
                                             insulated = insulated)
     
     solution = sor_diffusion.solve(1e-4)
-    sor_diffusion.plot_animation()
+    sor_diffusion.plot_animation(skip_n=1000)
     # sor_diffusion.plot_y_slice(0)
     
     
@@ -195,11 +195,12 @@ def optimal_omega_plot(mask = None, title='No Obstructions', file ='plots/opt_om
     # plt.legend()
     # plt.xscale('log')
     plt.yscale('log')
-    plt.xlabel(r'$\omega$')
-    plt.ylabel('N')
-    plt.title(title + r', $\omega_{min} = $' + '{:.2f}'.format(w_min))
+    plt.xlabel(r'$\omega$', fontsize=14)
+    plt.ylabel('iterations to reach tolerance', fontsize=14)
+    # plt.title(title + r', $\omega_{min} = $' + '{:.2f}'.format(w_min))
     # plt.ylim([2e2,9e4])
     plt.savefig(file, dpi=600)
+
     
     
 def optimal_omega_plot_inv(mask = None, title='No Sinks', file ='plots/opt_omega_tol.png', grid_size = 50, num_iter=1000 ):
@@ -229,20 +230,118 @@ def optimal_omega_plot_inv(mask = None, title='No Sinks', file ='plots/opt_omega
     plt.ylim([1e-16,1e-3])
     plt.yscale('log')
     plt.savefig(file, dpi=600)
+
+    
+    
+def optimal_omega_vs_N_plot(mask = None, title='No Obstructions', file ='plots/opt_omega_vs_N.png', grid_sizes=[50], tolerance=1e-9 ):
+    omegas = np.linspace(1.8, 2, 40)
+    Ns = np.zeros_like(omegas)
+    tolerance = [tolerance]
+    
+    plt.figure(figsize=[10,3])
+    plt.tight_layout()
+    
+    plt.subplots_adjust(bottom=0.15)
+
+    # opt_omegas = np.zeros_like(grid_sizes).astype(np.float64)
+    # for j, grid_size in enumerate(grid_sizes):
+    #     for i, omega in enumerate(omegas):
+    #         N = iter_to_convergence_SOR(tolerance, omega, max_steps=5000, mask = mask,grid_size=grid_size)
+    #         Ns[i] = N
+            
+    #     # plt.plot(omegas, Ns, label=grid_size)
+    #     w_min, N_min = min_val_approximation(omegas, Ns)
+    #     # print(p, N_min)
+    #     print(grid_size, 'Minimum omega at {:.5f} with {} samples'.format( w_min, N_min))
+    #     opt_omegas[j] = w_min
+    import pandas as pd
+    data = pd.read_csv('data/opt_omega_vs_N_data.csv')
+    grid_sizes = data['grid_size']
+    opt_omegas = data['omega']
+
+
+    plt.grid()
+    plt.plot(grid_sizes, opt_omegas, linestyle = '', marker='D')
+    # if len(grid_sizes) >1:
+    #     plt.legend(title='grid size')
+    # plt.legend()
+    # plt.xscale('log')
+    # plt.yscale('log')
+    plt.xlabel(r'grid size')
+    plt.ylabel(r'$\omega_{min}$')
+    # plt.title(title + r', $\omega_{min} = $' + '{:.2f}'.format(w_min))
+    plt.ylim([1.8,2])
+    plt.xlim([10,400])
+    plt.savefig(file, dpi=600)
+
         
+
+def a_maze():
+    import imageio as iio
+    maze_arr = iio.imread('plots/maze.png')
+    mask = (maze_arr[:,:,0]//255).astype(np.float64)
+    # mask = np.flip(mask, axis=0)
+    insulated = 1-mask
+    # main(mask, insulated, grid_size=53)
+
+    x_length = 1.0
+    y_length = 1.0
+    n_steps = 53
+    time_step_num = 1000000
+    omega = 1.87
+    # """
+    sor_diffusion = SORDiffusion(
+                                            x_length, 
+                                            y_length, 
+                                            n_steps, 
+                                            time_step_num, 
+                                            omega, 
+                                            lambda x, y: 1, 
+                                            mask=mask,
+                                            insulated = insulated)
+    
+    c, t, tol = sor_diffusion.solve(1e-9)
+    fig, ax = plt.subplots()
+    fig.tight_layout()
+    # ax = axs[0]
+    # ax.imshow(mask,cmap="hot",origin="lower",aspect='equal')
+    # ax = axs[1]
+    # ax.set_xlabel("X")
+    # ax.set_ylabel("Y")
+    # ax.set_title("Equilibrium Diffusion")
+    print(c[t].shape, mask.shape)
+    heatmap = ax.imshow(c[t], cmap="hot", origin="lower",aspect='equal' ) #extent=[0,x_length, 0, y_length])
+
+    cbar = plt.colorbar(heatmap, fraction=0.046, pad=0.04)
+    cbar.set_label("Concentration", fontsize=14)
+    # sor_diffusion.plot_y_slice(0)
+    plt.savefig('plots/maze_heatmap.png', dpi=600)
+    plt.show()
+    fig, ax = plt.subplots()
+    fig.tight_layout()
+    # ax = axs[0]
+    ax.imshow(mask,cmap="hot",origin="lower",aspect='equal')
+    plt.show()
+
 
 if __name__ == '__main__':
     
-    mask = np.ones([50, 50])    
-    mask[2,5:10] = 0
-    insulated = 1 - mask
-    print(mask)
-    main(mask=mask, insulated=insulated)
+    # mask = np.ones([50, 50])    
+    # mask[4,5:10] = 0
+    # insulated = 1 - mask
+    # print(mask)
+    # main(mask=mask, insulated=insulated)
     # main()
     # iter_to_convergence_plot()
     # iter_to_convergence_plot_inv()
     # optimal_omega_plot_inv(num_iter=5000, grid_size=100)
-    # grid_sizes = [40,50,60,100]
-    # optimal_omega_plot(grid_sizes=grid_sizes, tolerance=1e-12)
+    grid_sizes = [40,50,60,100]
+    optimal_omega_plot(grid_sizes=grid_sizes, tolerance=1e-12)
+
+
+    # a_maze()
+
+    # grid_sizes = np.linspace(25,400,20).astype(np.int64)
+    # optimal_omega_vs_N_plot(grid_sizes=grid_sizes)
     
     

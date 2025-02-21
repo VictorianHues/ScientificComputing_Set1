@@ -36,8 +36,8 @@ class SORDiffusion:
 
         self.c = np.zeros((self.time_step_num, self.n_steps, self.n_steps))
 
-        self.c[0, 0, :] = self.initial_condition_func(self.x_points, self.y_points)
-        self.c[0, -1, :] = 0.0
+        self.c[0, -1, :] = self.initial_condition_func(self.x_points, self.y_points)
+        self.c[0, 0, :] = 0.0
  
         # if self.omega > 2.0:
         #     raise ValueError(f"SOR becomes unstable for omega > 2, please use a smaller value. Current value: {self.omega}")
@@ -46,10 +46,11 @@ class SORDiffusion:
         
         _, t, tol = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance, insulated=self.insulated)
         if tolerance is not None:
-            print('finished at iteration', t, ' with tolerance ', tol)
+            # print('finished at iteration', t, ' with tolerance ', tol)
+            pass
         return self.c, t, tol
     
-    def plot_animation(self):
+    def plot_animation(self, skip_n=1):
         fig, ax = plt.subplots()
         heatmap = ax.imshow(self.c[0], cmap="hot", origin="lower", extent=[0, self.x_length, 0, self.y_length])
         ax.set_xlabel("X")
@@ -60,11 +61,11 @@ class SORDiffusion:
         cbar.set_label("Concentration")
 
         def update(frame):
-            heatmap.set_array(self.c[frame]) 
-            ax.set_title(f"Equilibrium Diffusion (frame = {frame})")
+            heatmap.set_array(self.c[frame * skip_n]) 
+            ax.set_title(f"Equilibrium Diffusion (frame = {frame* skip_n})")
             return heatmap,
 
-        ani = animation.FuncAnimation(fig, update, frames=self.time_step_num, interval=50, blit=False)
+        ani = animation.FuncAnimation(fig, update, frames=self.time_step_num //(skip_n), interval=50, blit=False)
         plt.show()
 
     def plot_y_slice(self, x_val):
