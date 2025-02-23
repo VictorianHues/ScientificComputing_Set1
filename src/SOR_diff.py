@@ -9,13 +9,17 @@ from scipy.special import erfc
 
 
 class SORDiffusion:
+    """
+    class that stores all simulation parameters and offers some default methods for visualization  
+    for the SOR method for time-independent diffusion
+    """
     def __init__(self,
                  x_length : float,
                  y_length : float,
                  n_steps : int,
                  time_step_num : float,
                  omega : float,
-                 initial_condition_func : callable,
+                 initial_condition_func : callable = lambda x:1,
                  mask = None,
                  insulated= None):
       
@@ -38,15 +42,10 @@ class SORDiffusion:
         self.c[0, -1, :] = 1.0
         self.c[0, 0, :] = 0.0
  
-        # if self.omega > 2.0:
-        #     raise ValueError(f"SOR becomes unstable for omega > 2, please use a smaller value. Current value: {self.omega}")
 
     def solve(self, tolerance = None):
         
         _, t, tol = SOR(self.c, self.omega, mask=self.mask, tolerance=tolerance, insulated=self.insulated)
-        if tolerance is not None:
-            # print('finished at iteration', t, ' with tolerance ', tol)
-            pass
         self.end_time = t
         return self.c, t, tol
     

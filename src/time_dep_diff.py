@@ -84,6 +84,10 @@ def plot_y_slice_time_magnitudes(time_step_size,
 
 
 class TimeDependentDiffusion:
+    """
+    class that stores all simulation parameters and offers some default methods for visualization  
+    for the SOR method for time-independent diffusion
+    """
     def __init__(self,
                  time_step_size : float,
                  x_length : float,

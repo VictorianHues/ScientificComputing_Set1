@@ -4,6 +4,10 @@ import matplotlib.animation as animation
 
 from finite_difference import jacobi
 class Jacobi:
+    """
+    class that stores all simulation parameters and offers some default methods for visualization  
+    for the Jacobi method for time-independent diffusion
+    """
     def __init__(self, 
                  n_steps, 
                  epsilon=1e-5, 

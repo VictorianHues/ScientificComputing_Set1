@@ -105,6 +105,7 @@ def SOR(c, omega, mask=None, tolerance= None, insulated=None):
         mask = np.ones(shape=c.shape[1:])
     if insulated is None:
         insulated = np.zeros(shape=c.shape[1:])
+    eps = 1e100
     for t in range(0, time_step_num - 1):
         # Top and Bottom Boundaries
         c[t+1, -1] = c[t, -1]

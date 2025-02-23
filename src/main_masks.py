@@ -1,141 +1,116 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import time
-
-
+import matplotlib.patches as patches
+from mask_domain import InsertSink
 from SOR_diff import SORDiffusion
-from jacobi_iteration import Jacobi
-from numba import njit, prange
-from finite_difference import fast_solve, SOR
+from main_masks import optimal_omega, main
 
-def main(mask = None):
-    x_length = 1.0
-    y_length = 1.0
-    n_steps = 50
-    time_step_num = 100000
-    omega = 1.8
-    # """
-    sor_diffusion = SORDiffusion(
-                                            x_length, 
-                                            y_length, 
-                                            n_steps, 
-                                            time_step_num, 
-                                            omega, 
-                                            mask = mask)
-    
-    solution, end_time = sor_diffusion.solve(1e-16)
 
-    sor_diffusion.plot_animation()
-    #sor_diffusion.plot_y_slice(0)
+# # EXPERIMENTS 
 
-    sor_diffusion.plot_single_frame(end_time)
-    sor_diffusion.plot_analytical_sol()
+# #Experiment 1: Two rectangles - horizontal 
 
-    sor_diffusion.compare_solutions_full_range(end_time)
+# domain_sink_two_rectangle_v = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((40,10), (5,10)), ((40,30),(5,10))])
+# for_vis_two_v= InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((5,10), (5,10)), ((5,30),(5,10))])
+# mask_rectangle_two_v = domain_sink_two_rectangle_v.domain
+# optimal_omega_plot(mask = mask_rectangle_two_v)
 
-def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
-    Ns = np.zeros_like(tolerances)
-    for i in range(len(tolerances)):
-        tolerance = tolerances[i]
-        
-        x_length = 1.0
-        y_length = 1.0
-        n_steps = 50
-        time_step_num = max_steps
-        # omega = 0.1
-        # """
+# #Experiment 2: Two rectangles - vertical
+# domain_sink_two_rectangle_h = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((35,15), (10,5)), ((35,30),(10,5))])
+# for_vis_two_h = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((5,15), (10,5)), ((5,30),(10,5))])
+# mask_rectangle_two_h = domain_sink_two_rectangle_h.domain
+# optimal_omega_plot(mask = mask_rectangle_two_h) 
 
-        sor_diffusion = SORDiffusion(
-                                    x_length, 
-                                    y_length, 
-                                    n_steps, 
-                                    time_step_num, 
-                                    omega,
-                                    mask)
+# #Experiment 3: Three rectangles - holizontal 
 
-        
-        solution, t = sor_diffusion.solve(tolerance=tolerance)
-        #sor_diffusion.plot_animation()    
-        Ns[i] = t
-    return Ns
+# domain_sink_three_rectangle_h = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((40,0), (5,10)), ((40,20),(5,10)), ((40,40),(5,10))])
+# for_vis_three_h= InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((5,0), (5,10)), ((5,20), (5,10)), ((5,40), (5,10))])
+# mask_rectangle_three_h = domain_sink_three_rectangle_h.domain
+# optimal_omega_plot(mask = mask_rectangle_three_h)
 
-    
-def iter_to_convergence_Jacobi(tolerances):
-    Ns = np.zeros_like(tolerances)
-    for i, tolerance in enumerate(tolerances):
-        
-        n_steps = 50
-        time_step_num = 100000
-        # omega = 0.1
-        # """
-        jacobi_diffusion = Jacobi(
-                                                n_steps, 
-                                                tolerance,
-                                                time_step_num)
-        
-        solution, t = jacobi_diffusion.solve()
-        print(t)
-        # sor_diffusion.plot_animation()    
-        Ns[i] = t
-    return Ns
-    
-    
-def iter_to_convergence_plot():
-    omegas = [ 0.7, 1, 1.5, 1.7, 1.9]
-    # omegas = np.linspace(0.5,1.93, 10)
-    tolerances = 1/10**np.linspace(3,8,50)
-    for omega in omegas:
-        num_steps = iter_to_convergence_SOR(tolerances, omega)
-        plt.plot(tolerances, num_steps, label=r'SOR, $\omega$ = {}'.format(omega))
-    
-    num_steps = iter_to_convergence_Jacobi(tolerances)
-    plt.plot(tolerances, num_steps, label='Jacobi')
-        
-    plt.grid()
-    plt.legend()
-    plt.xscale('log')
-    # plt.yscale('log')
-    plt.xlabel(r'$\varepsilon$')
-    plt.ylabel('N')
-    plt.title('Number of Iterations to Converge')
-    plt.savefig('plots/num_iter_vs_tol.png', dpi=600)
-    plt.show()
-    
-    
-def min_val_approximation(x, y, dx = 1):
-    i = np.argmin(y)
-    # print(omegas[i-dw:i+dw+1], Ns[i-dw:i+dw+1])
-    p = np.polyfit(x[i-dx:i+dx+1], y[i-dx:i+dx+1], 2)
-    x_min = - p[1] / (2*p[0])
-    y_min = np.polyval(p, x_min)
-    
-    return x_min, y_min
-    
-    
-def optimal_omega(mask = None):
-    omegas = np.linspace(0.01, 2, 500)
-    Ns = np.zeros_like(omegas)
-    tolerance = [1e-9]
-    
-    for i, omega in enumerate(omegas):
-        N = iter_to_convergence_SOR(tolerance, omega, max_steps=100000, mask = mask)
-        Ns[i] = N
+# #Experiment 4: Three rectangles - vertical 
 
-    w_min, N_min = min_val_approximation(omegas, Ns)
-    print('Minimum omega at {:.5f}'.format( w_min))
-    print(f'Number of iteration to achive minimum omega is {N_min}')
-    return w_min, N_min
-    
+# domain_sink_three_rectangle_v = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((35,7), (10,5)), ((35,22),(10,5)), ((35,37),(10,5))])
+# for_vis_three_v = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((5,7), (10,5)), ((5,22), (10,5)), ((5,37), (10,5))])
+# mask_rectangle_three_v = domain_sink_three_rectangle_v.domain
+# optimal_omega(mask = mask_rectangle_three_v)
 
-if __name__ == '__main__':
-    start_time = time.time()
-    main()
-    #iter_to_convergence_plot()
-    #optimal_omega_plot()
 
-    end_time = time.time()
+# #Experiment 5: changing the size of the rectangle (only varing the x dimension)
 
-    print(f"Execution time: {end_time - start_time} seconds")
+# values = [(40,10),(35,15),(30,20),(25,25),(20,30),(15,35),(10,40),(5,45),(0,50)]
 
-    
-    
+# results = {}
+
+# for x_coordinate, size in values:
+#     domain_sink_one_rectangle = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((x_coordinate,40), (size,10))])
+#     mask_rectangle = domain_sink_one_rectangle.domain
+#     w_min, N_min = optimal_omega_plot(mask = mask_rectangle)
+#     results[(x_coordinate, size)] = (w_min, N_min)
+#     print(results)
+
+#Experiment 6: concentration profile - three - vertical
+# tolerance = None
+
+# domain_sink_three_rectangle_v = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((35,7), (10,5)), ((35,22),(10,5)), ((35,37),(10,5))])
+# #for_vis_three_v = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((5,7), (10,5)), ((5,22), (10,5)), ((5,37), (10,5))])
+# mask_rectangle_three_v = domain_sink_three_rectangle_v.domain
+# #optimal_omega(mask = mask_rectangle_three_v)
+# diff = SORDiffusion(x_length=1, y_length=1, n_steps=50,time_step_num = 20000, omega = 1.89, mask = mask_rectangle_three_v)
+# c, end_time = diff.solve(tolerance)
+# print(f"{end_time}")
+# diff.plot_animation()
+# diff.plot_single_frame(time = 10000)
+
+#Experiment 7 - three -  horizontal
+
+# tolerance = None
+# domain_sink_three_rectangle_h = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((40,0), (5,10)), ((40,20),(5,10)), ((40,40),(5,10))])
+# #for_vis_three_h= InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((5,0), (5,10)), ((5,20), (5,10)), ((5,40), (5,10))])
+# mask_rectangle_three_h = domain_sink_three_rectangle_h.domain
+# diff = SORDiffusion(x_length=1, y_length=1, n_steps=50,time_step_num = 20000, omega = 1.89, mask = mask_rectangle_three_h)
+# c, end_time = diff.solve(tolerance)
+# print(f"{end_time}")
+# diff.plot_animation()
+# diff.plot_single_frame(time = 10000)
+
+
+# #Experiment 9- two - vertical
+# domain_sink_two_rectangle_h = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((35,15), (10,5)), ((35,30),(10,5))])
+# # for_vis_two_h = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((5,15), (10,5)), ((5,30),(10,5))])
+# mask_rectangle_two_h = domain_sink_two_rectangle_h.domain
+# tolerance = None
+# diff = SORDiffusion(x_length=1, y_length=1, n_steps=50,time_step_num = 20000, omega = 1.89, mask = mask_rectangle_two_h)
+# c, end_time = diff.solve(tolerance)
+# diff.plot_animation()
+# diff.plot_single_frame(time = 10000)
+
+
+#Experiment 9- one - vertical
+domain_sink_one_v = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((35,22), (10,5))])
+mask_rectangle_two_h = domain_sink_one_v.domain
+tolerance = None
+diff = SORDiffusion(x_length=1, y_length=1, n_steps=50,time_step_num = 20000, omega = 1.89, mask = mask_rectangle_two_h)
+c, end_time, tol= diff.solve(tolerance)
+diff.plot_animation()
+diff.plot_single_frame(time = 10000)
+
+
+#Experiment 10- two - vertical
+domain_sink_two_rectangle_h = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((35,15), (10,5)), ((35,30),(10,5))])
+mask_rectangle_two_h = domain_sink_two_rectangle_h.domain
+tolerance = None
+diff = SORDiffusion(x_length=1, y_length=1, n_steps=50,time_step_num = 20000, omega = 1.89, mask = mask_rectangle_two_h)
+c, end_time, tol= diff.solve(tolerance)
+diff.plot_animation()
+diff.plot_single_frame(time = 10000)
+
+
+#Experiment 11- three - vertical
+domain_sink_three_rectangle_v = InsertSink(x_length=1, y_length=1, n_steps=50, shape_type="rectangle", show_plot=True, rectangles = [((35,7), (10,5)), ((35,22),(10,5)), ((35,37),(10,5))])
+mask_rectangle_two_h = domain_sink_three_rectangle_v.domain
+tolerance = None
+diff = SORDiffusion(x_length=1, y_length=1, n_steps=50,time_step_num = 20000, omega = 1.89, mask = mask_rectangle_two_h)
+c, end_time, tol= diff.solve(tolerance)
+diff.plot_animation()
+diff.plot_single_frame(time = 10000)
