@@ -59,49 +59,6 @@ def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
         Ns[i] = t
     return Ns
 
-# @njit(parallel=True)  
-# def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
-#     Ns = np.zeros_like(tolerances)
-#     for i in prange(len(tolerances)):
-#         tolerance = tolerances[i]
-        
-#         x_length = 1.0
-#         y_length = 1.0
-#         n_steps = 50
-#         time_step_num = max_steps
-#         # omega = 0.1
-#         # """
-        
-#         x_points = np.linspace(0, x_length, n_steps)
-#         y_points = np.linspace(0, y_length, n_steps)
-
-#         x_step_size = x_length / (n_steps - 1)
-#         y_step_size = y_length / (n_steps - 1)
-
-#         c = np.zeros((time_step_num, n_steps, n_steps))
-
-#         c[0, -1, :] = 1.0
-#         c[0, 0, :] = 0.0
-
-#         solution, t = SOR(c, omega, mask=mask, tolerance=tolerance)
-#         if tolerance is not None:
-#             print('finished after ', t, ' iterations')
-
-
-#         # sor_diffusion = SORDiffusion(
-#         #                             x_length, 
-#         #                             y_length, 
-#         #                             n_steps, 
-#         #                             time_step_num, 
-#         #                             omega, 
-#         #                             lambda x, y: 1,
-#         #                             mask)
-        
-#         # solution, t = sor_diffusion.solve(tolerance=tolerance)
-#         # sor_diffusion.plot_animation()    
-#         Ns[i] = t
-#     return Ns
-    
     
 def iter_to_convergence_Jacobi(tolerances):
     Ns = np.zeros_like(tolerances)

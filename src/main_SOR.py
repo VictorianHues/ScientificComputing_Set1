@@ -8,34 +8,23 @@ from jacobi_iteration import Jacobi
 from numba import njit, prange
 from finite_difference import fast_solve, SOR
 
-def main(mask=None, insulated = None, grid_size=50):
-    x_length = 1.0
-    y_length = 1.0
-    n_steps = grid_size
-    time_step_num = 1000000
-    omega = 1.87
-    # """
-    sor_diffusion = SORDiffusion(
-                                            x_length, 
-                                            y_length, 
-                                            n_steps, 
-                                            time_step_num, 
-                                            omega, 
-                                            lambda x, y: 1, 
-                                            mask=mask,
-                                            insulated = insulated)
-    
-    solution, end_time = sor_diffusion.solve(1e-16)
-
-    sor_diffusion.plot_animation(skip_n=1)
-    #sor_diffusion.plot_y_slice(0)
-
-    sor_diffusion.plot_single_frame(end_time)
-    sor_diffusion.plot_analytical_sol()
-
-    sor_diffusion.compare_solutions_full_range(end_time)
 
 def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None, grid_size = 50):
+    """"
+    simulate diffusion on a 2d grid to convergence at specified tolerances with the SOR method.
+    periodic boundary conditions with source at top and sink at bottom. 
+    
+    params:
+        tolerances: list of different tolerance values to test
+        omega:      parameter for SOR
+        max_steps:  maximum number of iterations
+        grid_size:  size of grid
+        mask:       binary mask - 0 for nodes that are sinks
+        insulated:  binary mask - 1 for nodes that are insulated    
+
+    returns:
+        Ns:         number of iterations to reach converges, same shape as tolerances
+    """
     Ns = np.zeros_like(tolerances)
     for i in range(len(tolerances)):
         tolerance = tolerances[i]
@@ -60,52 +49,19 @@ def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None, grid
         # sor_diffusion.plot_animation()    
         Ns[i] = t
     return Ns
-
-# @njit(parallel=True)  
-# def iter_to_convergence_SOR(tolerances, omega, max_steps=100000, mask=None):
-#     Ns = np.zeros_like(tolerances)
-#     for i in prange(len(tolerances)):
-#         tolerance = tolerances[i]
-        
-#         x_length = 1.0
-#         y_length = 1.0
-#         n_steps = 50
-#         time_step_num = max_steps
-#         # omega = 0.1
-#         # """
-        
-#         x_points = np.linspace(0, x_length, n_steps)
-#         y_points = np.linspace(0, y_length, n_steps)
-
-#         x_step_size = x_length / (n_steps - 1)
-#         y_step_size = y_length / (n_steps - 1)
-
-#         c = np.zeros((time_step_num, n_steps, n_steps))
-
-#         c[0, -1, :] = 1.0
-#         c[0, 0, :] = 0.0
-
-#         solution, t = SOR(c, omega, mask=mask, tolerance=tolerance)
-#         if tolerance is not None:
-#             print('finished after ', t, ' iterations')
-
-
-#         # sor_diffusion = SORDiffusion(
-#         #                             x_length, 
-#         #                             y_length, 
-#         #                             n_steps, 
-#         #                             time_step_num, 
-#         #                             omega, 
-#         #                             lambda x, y: 1,
-#         #                             mask)
-        
-#         # solution, t = sor_diffusion.solve(tolerance=tolerance)
-#         # sor_diffusion.plot_animation()    
-#         Ns[i] = t
-#     return Ns
     
     
 def iter_to_convergence_Jacobi(tolerances):
+    """"
+    simulate diffusion on a 2d grid to convergence at specified tolerances with the Jacobi method.
+    periodic boundary conditions with source at top and sink at bottom. 
+    
+    params:
+        tolerances: list of different tolerance values to test
+
+    returns:
+        Ns:         number of iterations to reach converges, same shape as tolerances
+    """
     Ns = np.zeros_like(tolerances)
     for i, tolerance in enumerate(tolerances):
         
@@ -126,6 +82,16 @@ def iter_to_convergence_Jacobi(tolerances):
 
 
 def tol_after_N_Jacobi(Ns):
+    """"
+    simulate diffusion on a 2d grid for a specified number of iterations with the Jacobi method.
+    periodic boundary conditions with source at top and sink at bottom. 
+    
+    params:
+        Ns:         list of different iteration counts to test
+
+    returns:
+        tolerances:         tolerance / maximum difference after N iterations, same shape as Ns
+    """
     tolerances = np.zeros_like(Ns, dtype=np.float64)
     for i, N in enumerate(Ns):
         
@@ -146,6 +112,20 @@ def tol_after_N_Jacobi(Ns):
 
 
 def tol_after_N_SOR(Ns, omega,  grid_size=50, max_steps=100000, mask=None):
+    """"
+    simulate diffusion on a 2d grid for a specified number of iterations with the SOR method.
+    periodic boundary conditions with source at top and sink at bottom. 
+    
+    params:
+        Ns:         list of different iteration counts to test
+        omega:      parameter for SOR
+        max_steps:  maximum number of iterations
+        grid_size:  size of grid
+        mask:       binary mask - 0 for nodes that are sinks 
+
+    returns:
+        tolerances:         tolerance / maximum difference after N iterations, same shape as Ns
+    """
     tolerances = np.zeros_like(Ns, dtype=np.float64)
     for i, N in enumerate(Ns):
         
@@ -173,6 +153,11 @@ def tol_after_N_SOR(Ns, omega,  grid_size=50, max_steps=100000, mask=None):
     
     
 def iter_to_convergence_plot():
+    """"
+    Run multiple finite difference diffusion experiments and plot the results.
+    This experiment measures the number of iterations to reach different tolerance levels for different omega of SOR and the Jacobi method
+    
+    """
     omegas = [ 0.7, 1, 1.5, 1.7, 1.9]
     # omegas = np.linspace(0.5,1.93, 10)
     tolerances = 1/10**np.linspace(3,8,50)
@@ -194,6 +179,11 @@ def iter_to_convergence_plot():
     plt.show()
     
 def iter_to_convergence_plot_inv():
+    """"
+    Run multiple finite difference diffusion experiments and plot the results.
+    This experiment measures the tolerance level reached after a set of number of iteration steps for different omega of SOR and the Jacobi method
+    The convergence rate is measured as the slope of the data before reaching a high convergence
+    """
     omegas = [ 0.7, 1, 1.5, 1.7, 1.9]
     # omegas = np.linspace(0.5,1.93, 10)
     Ns = (10**np.linspace(2,4.5,50)).astype(np.int64)
@@ -222,6 +212,11 @@ def iter_to_convergence_plot_inv():
     
     
 def min_val_approximation(x, y, dx = 1):
+    
+    """"
+    This method attempts to increase the accuracy of the location of the minimum of a dataset y(x) by fitting a parabola 
+    to the neighborhood of the minimal datapoint and finding its vertex.    
+    """
     i = np.argmin(y)
     # print(omegas[i-dw:i+dw+1], Ns[i-dw:i+dw+1])
     p = np.polyfit(x[i-dx:i+dx+1], y[i-dx:i+dx+1], 2)
@@ -232,6 +227,10 @@ def min_val_approximation(x, y, dx = 1):
     
     
 def optimal_omega_plot(mask = None, title='No Obstructions', file ='plots/opt_omega_full.png', grid_sizes=[50], tolerance=1e-8 ):
+    """"
+    Run multiple finite difference diffusion experiments and plot the results.
+    This experiment measures number of iterations to reach a set tolerance level for different omega of SOR and finds the omega for which this number of iterations is minimal.
+    """
     omegas = np.linspace(0.01, 2, 500)
     Ns = np.zeros_like(omegas)
     tolerance = [tolerance]
@@ -264,6 +263,10 @@ def optimal_omega_plot(mask = None, title='No Obstructions', file ='plots/opt_om
     
     
 def optimal_omega_plot_inv(mask = None, title='No Sinks', file ='plots/opt_omega_tol.png', grid_size = 50, num_iter=1000 ):
+    """"
+    Run multiple finite difference diffusion experiments and plot the results.
+    This experiment measures the tolerance level reached after a set of number of iteration steps for different omega of SOR and finds the omega for which this tolerance is minimal.
+    """
     omegas = np.linspace(0.01, 2, 100)
     tolerances = np.zeros_like(omegas)
     num_iter = [num_iter]
@@ -294,6 +297,10 @@ def optimal_omega_plot_inv(mask = None, title='No Sinks', file ='plots/opt_omega
     
     
 def optimal_omega_vs_N_plot(mask = None, title='No Obstructions', file ='plots/opt_omega_vs_N.png', grid_sizes=[50], tolerance=1e-9 ):
+    """"
+    Run multiple finite difference diffusion experiments and plot the results.
+    This experiment finds the optimal omega for different grid sizes.
+    """
     omegas = np.linspace(1.8, 2, 40)
     Ns = np.zeros_like(omegas)
     tolerance = [tolerance]
@@ -302,11 +309,11 @@ def optimal_omega_vs_N_plot(mask = None, title='No Obstructions', file ='plots/o
     plt.tight_layout()
     
     plt.subplots_adjust(bottom=0.15)
-
+    # this runs for multiple hours, use saved data to plot instead.
     # opt_omegas = np.zeros_like(grid_sizes).astype(np.float64)
     # for j, grid_size in enumerate(grid_sizes):
     #     for i, omega in enumerate(omegas):
-    #         N = iter_to_convergence_SOR(tolerance, omega, max_steps=5000, mask = mask,grid_size=grid_size)
+    #         N = iter_to_convergence_SOR(tolerance, omega, max_steps=10000, mask = mask,grid_size=grid_size)
     #         Ns[i] = N
             
     #     # plt.plot(omegas, Ns, label=grid_size)
@@ -340,12 +347,14 @@ def optimal_omega_vs_N_plot(mask = None, title='No Obstructions', file ='plots/o
         
 
 def a_maze():
+    """"
+    This experiment runs the simulation with a maze of insulated cells and animates the results.
+    """
     import imageio as iio
     maze_arr = iio.imread('plots/maze.png')
     mask = (maze_arr[:,:,0]//255).astype(np.float64)
     # mask = np.flip(mask, axis=0)
     insulated = 1-mask
-    # main(mask, insulated, grid_size=53)
 
     x_length = 1.0
     y_length = 1.0
@@ -364,52 +373,36 @@ def a_maze():
                                             insulated = insulated)
     
     c, t, tol = sor_diffusion.solve(1e-9)
-    # sor_diffusion.plot_animation(skip_n=10)
+    print('required {} iterations'.format(t))
+
+    sor_diffusion.plot_animation(skip_n=100)
+
+
     fig, ax = plt.subplots(figsize=[6,5])
     fig.subplots_adjust(left=0.07, bottom=0.06, right=0.85, top=0.95)
-    # fig.tight_layout()
-    # fig.subplots_adjust(right=0.02)
-    # ax = axs[0]
-    # ax.imshow(mask,cmap="hot",origin="lower",aspect='equal')
-    # ax = axs[1]
-    # ax.set_xlabel("X")
-    # ax.set_ylabel("Y")
-    # ax.set_title("Equilibrium Diffusion")
-    # print(c[t].shape, mask.shape)
     heatmap = ax.imshow(c[t], cmap="hot", origin="lower",aspect='equal' ) #extent=[0,x_length, 0, y_length])
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
     cbar = plt.colorbar(heatmap, fraction=0.046, pad=0.04)
     cbar.set_label("Concentration", fontsize=20)
     cbar.ax.tick_params(labelsize=16)
-    # sor_diffusion.plot_y_slice(0)
     plt.savefig('plots/maze_heatmap.png', dpi=600)
-    plt.show()
-    fig, ax = plt.subplots()
-    fig.tight_layout()
-    # ax = axs[0]
-    ax.imshow(mask,cmap="hot",origin="lower",aspect='equal')
     plt.show()
 
 
 if __name__ == '__main__':
     
-    # mask = np.ones([50, 50])    
-    # mask[4,5:10] = 0
-    # insulated = 1 - mask
-    # print(mask)
-    # main(mask=mask, insulated=insulated)
-    # main()
-    # iter_to_convergence_plot()
-    # iter_to_convergence_plot_inv()
-    # optimal_omega_plot_inv(num_iter=5000, grid_size=100)
+    a_maze()
+    
+    iter_to_convergence_plot_inv()
+
+    optimal_omega_plot_inv(num_iter=5000, grid_size=100)
+
     grid_sizes = [40,50,60,100]
+
     optimal_omega_plot(grid_sizes=grid_sizes, tolerance=1e-12)
 
-
-    # a_maze()
-
-    # grid_sizes = np.linspace(25,400,20).astype(np.int64)
-    # optimal_omega_vs_N_plot(grid_sizes=grid_sizes)
+    grid_sizes = np.linspace(25,400,20).astype(np.int64)
+    optimal_omega_vs_N_plot(grid_sizes=grid_sizes)
     
     
